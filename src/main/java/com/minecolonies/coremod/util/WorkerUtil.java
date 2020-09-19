@@ -103,7 +103,7 @@ public final class WorkerUtil
     {
         if (PATHING_TAG == null)
         {
-            PATHING_TAG = BlockTags.getCollection().getOrCreate(PATHING_BLOCKS);
+            PATHING_TAG = BlockTags.getCollection().func_241834_b(PATHING_BLOCKS);
         }
         return PATHING_TAG.contains(block);
     }

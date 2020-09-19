@@ -32,6 +32,7 @@ import com.minecolonies.api.util.constant.TypeConstants;
 import com.minecolonies.coremod.MineColonies;
 import com.minecolonies.coremod.Network;
 import com.minecolonies.coremod.colony.buildings.AbstractBuildingGuards;
+import com.minecolonies.coremod.colony.colonyEvents.citizenEvents.CitizenDiedEvent;
 import com.minecolonies.coremod.colony.jobs.*;
 import com.minecolonies.coremod.entity.SittingEntity;
 import com.minecolonies.coremod.entity.ai.citizen.guard.AbstractEntityAIGuard;
@@ -79,7 +80,6 @@ import net.minecraftforge.items.IItemHandler;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import javax.annotation.Nonnull;
 import java.time.Clock;
 import java.time.LocalDate;
 import java.time.Month;
@@ -245,7 +245,7 @@ public class EntityCitizen extends AbstractEntityCitizen
 
         this.moveController = new MovementHandler(this);
         this.enablePersistence();
-        this.setCustomNameVisible(MineColonies.getConfig().getCommon().alwaysRenderNameTag.get());
+        this.setCustomNameVisible(MineColonies.getConfig().getServer().alwaysRenderNameTag.get());
 
         entityStatemachine.addTransition(new TickingTransition<>(EntityState.INIT, () -> true, this::initialize, 40));
 
@@ -507,7 +507,7 @@ public class EntityCitizen extends AbstractEntityCitizen
     {
         final ItemStack hat = getItemStackFromSlot(EquipmentSlotType.HEAD);
         if (LocalDate.now(Clock.systemDefaultZone()).getMonth() == Month.DECEMBER
-              && MineColonies.getConfig().getCommon().holidayFeatures.get()
+              && MineColonies.getConfig().getServer().holidayFeatures.get()
               && !(getCitizenJobHandler().getColonyJob() instanceof JobStudent))
         {
             if (hat.isEmpty())
@@ -519,7 +519,7 @@ public class EntityCitizen extends AbstractEntityCitizen
         {
             this.setItemStackToSlot(EquipmentSlotType.HEAD, ItemStackUtils.EMPTY);
         }
-        this.setCustomNameVisible(MineColonies.getConfig().getCommon().alwaysRenderNameTag.get());
+        this.setCustomNameVisible(MineColonies.getConfig().getServer().alwaysRenderNameTag.get());
 
         if (!citizenColonyHandler.getColony().getStyle().equals(getDataManager().get(DATA_STYLE)))
         {
@@ -680,7 +680,7 @@ public class EntityCitizen extends AbstractEntityCitizen
 
         //Display some debug info always available while testing
         //Will help track down some hard to find bugs (Pathfinding etc.)
-        if (citizenJobHandler.getColonyJob() != null && MineColonies.getConfig().getCommon().enableInDevelopmentFeatures.get())
+        if (citizenJobHandler.getColonyJob() != null && MineColonies.getConfig().getServer().enableInDevelopmentFeatures.get())
         {
             setCustomName(new StringTextComponent(
               citizenData.getName() + " (" + citizenStatusHandler.getStatus() + ")[" + citizenJobHandler.getColonyJob().getNameTagDescription() + "]"));
@@ -1148,7 +1148,7 @@ public class EntityCitizen extends AbstractEntityCitizen
             return effect.getEffect();
         }
 
-        return MineColonies.getConfig().getCommon().workersAlwaysWorkInRain.get() ||
+        return MineColonies.getConfig().getServer().workersAlwaysWorkInRain.get() ||
                  (citizenColonyHandler.getWorkBuilding() != null && citizenColonyHandler.getWorkBuilding().canWorkDuringTheRain());
     }
 
@@ -1403,7 +1403,7 @@ public class EntityCitizen extends AbstractEntityCitizen
     @Override
     public void callForHelp(final Entity attacker, final int guardHelpRange)
     {
-        if (!(attacker instanceof LivingEntity) || !MineColonies.getConfig().getCommon().citizenCallForHelp.get() || callForHelpCooldown != 0)
+        if (!(attacker instanceof LivingEntity) || !MineColonies.getConfig().getServer().citizenCallForHelp.get() || callForHelpCooldown != 0)
         {
             return;
         }
@@ -1472,6 +1472,10 @@ public class EntityCitizen extends AbstractEntityCitizen
             }
             citizenColonyHandler.getColony().getCitizenManager().removeCivilian(getCitizenData());
             InventoryUtils.dropItemHandler(citizenData.getInventory(), world, (int) getPosX(), (int) getPosY(), (int) getPosZ());
+
+            final String deathCause =
+              new StringTextComponent(damageSource.getDeathMessage(this).getString()).getString().replaceFirst(this.getDisplayName().getString(), "Citizen");
+            citizenColonyHandler.getColony().getEventDescriptionManager().addEventDescription(new CitizenDiedEvent(getPosition(), citizenData.getName(), deathCause));
         }
         super.onDeath(damageSource);
     }
@@ -1546,9 +1550,9 @@ public class EntityCitizen extends AbstractEntityCitizen
         super.damageShield(damage);
     }
 
-    @Nonnull
+    @NotNull
     @Override
-    public <T> LazyOptional<T> getCapability(@Nonnull final Capability<T> capability, final Direction facing)
+    public <T> LazyOptional<T> getCapability(@NotNull final Capability<T> capability, final Direction facing)
     {
         if (capability == CapabilityItemHandler.ITEM_HANDLER_CAPABILITY)
         {
@@ -1599,15 +1603,17 @@ public class EntityCitizen extends AbstractEntityCitizen
     @Override
     public Team getTeam()
     {
+        if (world == null || world.isRemote)
+        {
+            return null;
+        }
+
         if (getCitizenColonyHandler().getColony() != null)
         {
             return getCitizenColonyHandler().getColony().getTeam();
         }
-        else
-        {
-            // Note: This function has always returned null on the client-side when the colony is not available yet.
-            return null;
-        }
+
+        return null;
     }
 
     @Override
@@ -1615,10 +1621,10 @@ public class EntityCitizen extends AbstractEntityCitizen
     {
         if (citizenData != null && citizenColonyHandler.getColony() != null && name != null)
         {
-            if (!name.getString().contains(citizenData.getName()) && MineColonies.getConfig().getCommon().allowGlobalNameChanges.get() >= 0)
+            if (!name.getString().contains(citizenData.getName()) && MineColonies.getConfig().getServer().allowGlobalNameChanges.get() >= 0)
             {
-                if (MineColonies.getConfig().getCommon().allowGlobalNameChanges.get() == 0 &&
-                      MineColonies.getConfig().getCommon().specialPermGroup.get()
+                if (MineColonies.getConfig().getServer().allowGlobalNameChanges.get() == 0 &&
+                      MineColonies.getConfig().getServer().specialPermGroup.get()
                         .stream()
                         .noneMatch(owner -> owner.equals(citizenColonyHandler.getColony().getPermissions().getOwnerName())))
                 {

@@ -19,6 +19,7 @@ import com.minecolonies.coremod.Network;
 import com.minecolonies.coremod.colony.CitizenData;
 import com.minecolonies.coremod.colony.Colony;
 import com.minecolonies.coremod.colony.buildings.AbstractBuildingGuards;
+import com.minecolonies.coremod.colony.colonyEvents.citizenEvents.CitizenSpawnedEvent;
 import com.minecolonies.coremod.colony.jobs.AbstractJobGuard;
 import com.minecolonies.coremod.entity.citizen.EntityCitizen;
 import com.minecolonies.coremod.network.messages.client.colony.ColonyViewCitizenViewMessage;
@@ -115,7 +116,6 @@ public class CitizenManager implements ICitizenManager
         if (!existingCitizen.isPresent())
         {
             data.setEntity(entity);
-            entity.setCivilianData(data);
             colony.getWorld().getScoreboard().addPlayerToTeam(entity.getScoreboardName(), colony.getTeam());
             return;
         }
@@ -275,6 +275,8 @@ public class CitizenManager implements ICitizenManager
                       colony.getName());
                 }
             }
+
+            colony.getEventDescriptionManager().addEventDescription(new CitizenSpawnedEvent(spawnPoint, citizenData.getName()));
         }
         final EntityCitizen entity = (EntityCitizen) ModEntities.CITIZEN.create(world);
         entity.getCitizenColonyHandler().registerWithColony(citizenData.getColony().getID(), citizenData.getId());
@@ -430,13 +432,13 @@ public class CitizenManager implements ICitizenManager
     @Override
     public int getMaxCitizens()
     {
-        return (int) Math.min(maxCitizens, Math.min(maxCitizensFromResearch(), MineColonies.getConfig().getCommon().maxCitizenPerColony.get()));
+        return (int) Math.min(maxCitizens, Math.min(maxCitizensFromResearch(), MineColonies.getConfig().getServer().maxCitizenPerColony.get()));
     }
 
     @Override
     public int getPotentialMaxCitizens()
     {
-        return (int) Math.min(potentialMaxCitizens, Math.min(maxCitizensFromResearch(), MineColonies.getConfig().getCommon().maxCitizenPerColony.get()));
+        return (int) Math.min(potentialMaxCitizens, Math.min(maxCitizensFromResearch(), MineColonies.getConfig().getServer().maxCitizenPerColony.get()));
     }
 
     /**
@@ -516,13 +518,13 @@ public class CitizenManager implements ICitizenManager
         }
 
         //  Spawn initial Citizens
-        if (colony.canMoveIn() && colony.hasTownHall() && getCitizens().size() < MineColonies.getConfig().getCommon().initialCitizenAmount.get())
+        if (colony.canMoveIn() && colony.hasTownHall() && getCitizens().size() < MineColonies.getConfig().getServer().initialCitizenAmount.get())
         {
             respawnInterval -= 500 + (SECONDS_A_MINUTE * colony.getBuildingManager().getTownHall().getBuildingLevel());
 
             if (respawnInterval <= 0)
             {
-                respawnInterval = MineColonies.getConfig().getCommon().citizenRespawnInterval.get() * TICKS_SECOND;
+                respawnInterval = MineColonies.getConfig().getServer().citizenRespawnInterval.get() * TICKS_SECOND;
                 // Make sure the initial citizen contain both genders
                 final ICitizenData newCitizen = createAndRegisterCivilianData();
 
@@ -537,6 +539,9 @@ public class CitizenManager implements ICitizenManager
                 }
 
                 spawnOrCreateCivilian(newCitizen, colony.getWorld(), null, true);
+
+                colony.getEventDescriptionManager().addEventDescription(new CitizenSpawnedEvent(colony.getBuildingManager().getTownHall().getPosition(),
+                      newCitizen.getName()));
             }
         }
     }

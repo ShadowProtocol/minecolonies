@@ -28,7 +28,7 @@ public class CitizenStatusHandler implements ICitizenStatusHandler
     /**
      * Whether the status display is enabled
      */
-    private boolean enabled = MineColonies.getConfig().getCommon().enableInDevelopmentFeatures.get();
+    private boolean enabled = MineColonies.getConfig().getServer().enableInDevelopmentFeatures.get();
 
     /**
      * The 4 lines of the latest status.

@@ -23,6 +23,7 @@ import net.minecraft.util.DamageSource;
 import net.minecraft.util.SoundEvent;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.DifficultyInstance;
+import net.minecraft.world.IServerWorld;
 import net.minecraft.world.IWorld;
 import net.minecraft.world.World;
 import net.minecraft.world.server.ServerWorld;
@@ -31,7 +32,6 @@ import org.jetbrains.annotations.NotNull;
 import javax.annotation.Nullable;
 import java.util.Random;
 
-import static com.minecolonies.api.colony.colonyEvents.NBTTags.TAG_EVENT_ID;
 import static com.minecolonies.api.entity.mobs.RaiderMobUtils.MOB_ATTACK_DAMAGE;
 import static com.minecolonies.api.util.constant.NbtTagConstants.*;
 import static com.minecolonies.api.util.constant.RaiderConstants.*;
@@ -216,7 +216,7 @@ public abstract class AbstractEntityMinecoloniesMob extends MobEntity implements
                                                  .withBuildLeafBridges()
                                                  .withPlaceLadders();
 
-            if (MinecoloniesAPIProxy.getInstance().getConfig().getCommon().doBarbariansBreakThroughWalls.get())
+            if (MinecoloniesAPIProxy.getInstance().getConfig().getServer().doBarbariansBreakThroughWalls.get())
             {
                 stuckHandler.withBlockBreaks();
                 stuckHandler.withCompleteStuckBlockBreak(6);
@@ -379,7 +379,7 @@ public abstract class AbstractEntityMinecoloniesMob extends MobEntity implements
                 currentCount = COUNTDOWN_SECOND_MULTIPLIER * TIME_TO_COUNTDOWN;
 
                 if (!this.getHeldItemMainhand().isEmpty() && SPEED_EFFECT != null && this.getHeldItemMainhand().getItem() instanceof IChiefSwordItem
-                      && MinecoloniesAPIProxy.getInstance().getConfig().getCommon().barbarianHordeDifficulty.get() >= BARBARIAN_HORDE_DIFFICULTY_FIVE)
+                      && MinecoloniesAPIProxy.getInstance().getConfig().getServer().barbarianHordeDifficulty.get() >= BARBARIAN_HORDE_DIFFICULTY_FIVE)
                 {
                     RaiderMobUtils.getBarbariansCloseToEntity(this, SPEED_EFFECT_DISTANCE)
                       .stream().filter(entity -> !entity.isPotionActive(Effects.SPEED))
@@ -396,9 +396,14 @@ public abstract class AbstractEntityMinecoloniesMob extends MobEntity implements
         super.livingTick();
     }
 
+    @org.jetbrains.annotations.Nullable
     @Override
     public ILivingEntityData onInitialSpawn(
-      final IWorld worldIn, final DifficultyInstance difficultyIn, final SpawnReason reason, @Nullable final ILivingEntityData spawnDataIn, @Nullable final CompoundNBT dataTag)
+      final IServerWorld worldIn,
+      final DifficultyInstance difficultyIn,
+      final SpawnReason reason,
+      @org.jetbrains.annotations.Nullable final ILivingEntityData spawnDataIn,
+      @org.jetbrains.annotations.Nullable final CompoundNBT dataTag)
     {
         RaiderMobUtils.setEquipment(this);
         return super.onInitialSpawn(worldIn, difficultyIn, reason, spawnDataIn, dataTag);

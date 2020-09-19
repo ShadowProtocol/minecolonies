@@ -761,8 +761,9 @@ public class EntityAIWorkFarmer extends AbstractEntityAICrafting<JobFarmer, Buil
         final NonNullList<ItemStack> drops = NonNullList.create();
         state.getDrops(new LootContext.Builder((ServerWorld) world).withLuck(fortune)
                          .withLuck(fortune)
+                         .withParameter(LootParameters.field_237457_g_, worker.getPositionVec())
                          .withParameter(LootParameters.TOOL, tool)
-                         .withParameter(LootParameters.POSITION, pos));
+                         .withParameter(LootParameters.THIS_ENTITY, getCitizen()));
         for (final ItemStack item : drops)
         {
             final ItemStack drop = item.copy();

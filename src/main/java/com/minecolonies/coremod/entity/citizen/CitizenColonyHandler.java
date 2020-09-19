@@ -160,6 +160,11 @@ public class CitizenColonyHandler implements ICitizenColonyHandler
     @Nullable
     public IColony getColony()
     {
+        if (colony == null && !citizen.world.isRemote)
+        {
+            registerWithColony(getColonyId(), citizen.getCivilianID());
+        }
+
         return colony;
     }
 

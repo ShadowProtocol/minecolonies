@@ -10,6 +10,7 @@ import net.minecraft.entity.ai.attributes.Attributes;
 import org.jetbrains.annotations.NotNull;
 
 import static com.minecolonies.api.util.constant.CitizenConstants.BASE_MOVEMENT_SPEED;
+import static com.minecolonies.coremod.colony.jobs.JobDeliveryman.BONUS_SPEED_PER_LEVEL;
 
 /**
  * The healer job class.

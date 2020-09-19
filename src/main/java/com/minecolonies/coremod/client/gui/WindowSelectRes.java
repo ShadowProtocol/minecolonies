@@ -150,7 +150,9 @@ public class WindowSelectRes extends AbstractWindowSkeleton
         this.allItems.addAll(ImmutableList.copyOf(StreamSupport.stream(Spliterators.spliteratorUnknownSize(ForgeRegistries.ITEMS.iterator(), Spliterator.ORDERED), false)
                                                     .map(ItemStack::new)
                                                     .filter((stack) -> (test.test(stack) && (this.filter.isEmpty() || stack.getTranslationKey().toLowerCase(Locale.US)
-                                                                                                                        .contains(this.filter.toLowerCase(Locale.US)))))
+                                                                                                                        .contains(this.filter.toLowerCase(Locale.US))
+                                                                                                                   || stack.getDisplayName().getString()
+                                                                                                                        .contains(filter.toLowerCase(Locale.US)))))
                                                     .collect(Collectors.toList())));
         this.updateResourceList();
     }

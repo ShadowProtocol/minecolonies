@@ -711,6 +711,12 @@ public class CitizenData implements ICitizenData
         buf.writeCompoundTag(happinessCompound);
 
         buf.writeInt(status != null ? status.getId() : -1);
+
+        buf.writeBoolean(job != null);
+        if (job != null)
+        {
+            job.serializeToView(buf);
+        }
     }
 
     @Override
@@ -724,7 +730,7 @@ public class CitizenData implements ICitizenData
     {
         if (colony != null && colony.isActive())
         {
-            this.saturation = Math.max(MIN_SATURATION, this.saturation - Math.abs(extraSaturation * MineColonies.getConfig().getCommon().foodModifier.get()));
+            this.saturation = Math.max(MIN_SATURATION, this.saturation - Math.abs(extraSaturation * MineColonies.getConfig().getServer().foodModifier.get()));
             this.justAte = false;
         }
     }

@@ -52,6 +52,7 @@ import net.minecraft.nbt.ListNBT;
 import net.minecraft.nbt.NBTUtil;
 import net.minecraft.network.PacketBuffer;
 import net.minecraft.pathfinding.Path;
+import net.minecraft.util.RegistryKey;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.Tuple;
 import net.minecraft.util.math.BlockPos;
@@ -102,12 +103,6 @@ public abstract class AbstractBuildingGuards extends AbstractBuildingWorker impl
      * The Bonus Health for each building level
      */
     private static final int BONUS_HEALTH_PER_LEVEL = 2;
-
-    /**
-     * The health modifier which changes the HP
-     */
-    private final AttributeModifier healthModConfig =
-      new AttributeModifier(GUARD_HEALTH_MOD_CONFIG_NAME, MineColonies.getConfig().getCommon().guardHealthMult.get() - 1.0, AttributeModifier.Operation.MULTIPLY_TOTAL);
 
     /**
      * Vision range per building level.
@@ -267,9 +262,12 @@ public abstract class AbstractBuildingGuards extends AbstractBuildingWorker impl
             if (optCitizen.isPresent())
             {
                 final AbstractEntityCitizen citizenEntity = optCitizen.get();
-                final AttributeModifier healthModBuildingHP = new AttributeModifier(GUARD_HEALTH_MOD_BUILDING_NAME, getBonusHealth(), AttributeModifier.Operation.ADDITION);
-                AttributeModifierUtils.addHealthModifier(citizenEntity, healthModBuildingHP);
-                AttributeModifierUtils.addHealthModifier(citizenEntity, healthModConfig);
+                AttributeModifierUtils.addHealthModifier(citizenEntity,
+                    new AttributeModifier(GUARD_HEALTH_MOD_BUILDING_NAME, getBonusHealth(), AttributeModifier.Operation.ADDITION));
+                AttributeModifierUtils.addHealthModifier(citizenEntity,
+                    new AttributeModifier(GUARD_HEALTH_MOD_CONFIG_NAME,
+                        MineColonies.getConfig().getServer().guardHealthMult.get() - 1.0,
+                        AttributeModifier.Operation.MULTIPLY_TOTAL));
             }
 
             // Set new home, since guards are housed at their workerbuilding.
@@ -1209,21 +1207,21 @@ public abstract class AbstractBuildingGuards extends AbstractBuildingWorker impl
         mobsToAttack = new HashMap<>();
 
         int i = 0;
-        for (final Map.Entry<ResourceLocation, EntityType<?>> entry : ForgeRegistries.ENTITIES.getEntries())
+        for (final Map.Entry<RegistryKey<EntityType<?>>, EntityType<?>> entry : ForgeRegistries.ENTITIES.getEntries())
         {
             if (entry.getValue().getClassification() == EntityClassification.MONSTER)
             {
                 i++;
-                mobsToAttack.put(entry.getKey(), new MobEntryView(entry.getKey(), true, i));
+                mobsToAttack.put(entry.getKey().func_240901_a_(), new MobEntryView(entry.getKey().func_240901_a_(), true, i));
             }
             else
             {
-                for (final String location : MineColonies.getConfig().getCommon().guardResourceLocations.get())
+                for (final String location : MineColonies.getConfig().getServer().guardResourceLocations.get())
                 {
                     if (entry.getKey() != null && entry.getKey().toString().equals(location))
                     {
                         i++;
-                        mobsToAttack.put(entry.getKey(), new MobEntryView(entry.getKey(), true, i));
+                        mobsToAttack.put(entry.getKey().func_240901_a_(), new MobEntryView(entry.getKey().func_240901_a_(), true, i));
                     }
                 }
             }

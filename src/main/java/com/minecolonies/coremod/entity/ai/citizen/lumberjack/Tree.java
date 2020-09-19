@@ -26,6 +26,7 @@ import net.minecraft.tags.ItemTags;
 import net.minecraft.util.NonNullList;
 import net.minecraft.util.Tuple;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.vector.Vector3d;
 import net.minecraft.world.IWorld;
 import net.minecraft.world.IWorldReader;
 import net.minecraft.world.World;
@@ -282,10 +283,10 @@ public class Tree
 
         for (int i = 1; i < 100; i++)
         {
-            list.addAll(state.getDrops(new LootContext.Builder(world).withParameter(LootParameters.POSITION, position)
+            list.addAll(state.getDrops(new LootContext.Builder(world)
                                          .withParameter(LootParameters.TOOL,
-                                           new ItemStack(Items.WOODEN_AXE))
-                                         .withLuck(100)));
+                                           new ItemStack(Items.WOODEN_AXE)).withLuck(100)
+                                         .withParameter(LootParameters.field_237457_g_, new Vector3d(position.getX(), position.getY(), position.getZ()))));
             if (!list.isEmpty())
             {
                 for (ItemStack stack : list)
@@ -341,7 +342,7 @@ public class Tree
         // Only harvest nearly fully grown dynamic trees(8 max)
         if (Compatibility.isDynamicBlock(block)
               && BlockStateUtils.getPropertyByNameFromState(state, DYNAMICTREERADIUS) != null
-              && ((Integer) state.get(BlockStateUtils.getPropertyByNameFromState(state, DYNAMICTREERADIUS)) < MineColonies.getConfig().getCommon().dynamicTreeHarvestSize.get()))
+              && ((Integer) state.get(BlockStateUtils.getPropertyByNameFromState(state, DYNAMICTREERADIUS)) < MineColonies.getConfig().getServer().dynamicTreeHarvestSize.get()))
         {
             return false;
         }

@@ -202,7 +202,7 @@ public abstract class AbstractEntityAIInteract<J extends AbstractJob<?, J>, B ex
             //If Silk Touch doesn't work, get blocks with Fortune value as normal.
             else
             {
-                localItems.addAll(BlockPosUtil.getBlockDrops(world, blockToMine, fortune, tool));
+                localItems.addAll(BlockPosUtil.getBlockDrops(world, blockToMine, fortune, tool, worker));
             }
 
             localItems = increaseBlockDrops(localItems);
@@ -296,8 +296,8 @@ public abstract class AbstractEntityAIInteract<J extends AbstractJob<?, J>, B ex
             return (int) world.getBlockState(pos).getBlockHardness(world, pos);
         }
 
-        return MineColonies.getConfig().getCommon().pvp_mode.get()
-                 ? MineColonies.getConfig().getCommon().blockMiningDelayModifier.get() / 2
+        return MineColonies.getConfig().getServer().pvp_mode.get()
+                 ? MineColonies.getConfig().getServer().blockMiningDelayModifier.get() / 2
                  : calculateWorkerMiningDelay(block, pos);
     }
 
@@ -318,7 +318,7 @@ public abstract class AbstractEntityAIInteract<J extends AbstractJob<?, J>, B ex
             reduction = 1 - effect.getEffect();
         }
 
-        return (int) (((MineColonies.getConfig().getCommon().blockMiningDelayModifier.get() * Math.pow(LEVEL_MODIFIER, getBreakSpeedLevel() / 2.0))
+        return (int) (((MineColonies.getConfig().getServer().blockMiningDelayModifier.get() * Math.pow(LEVEL_MODIFIER, getBreakSpeedLevel() / 2.0))
                          * (double) world.getBlockState(pos).getBlockHardness(world, pos) / (double) (worker.getHeldItemMainhand()
                                                                                                         .getItem()
                                                                                                         .getDestroySpeed(worker.getHeldItemMainhand(), block.getDefaultState())))

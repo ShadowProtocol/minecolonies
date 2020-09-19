@@ -20,9 +20,7 @@ import net.minecraft.entity.player.PlayerInventory;
 import net.minecraft.util.Direction;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.MathHelper;
-import net.minecraft.util.text.ITextComponent;
-import net.minecraft.util.text.StringTextComponent;
-import net.minecraft.util.text.TextFormatting;
+import net.minecraft.util.text.*;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 import org.jetbrains.annotations.NotNull;
@@ -269,12 +267,12 @@ public class WindowField extends ContainerScreen<ContainerField>
                 return;
             }
 
-            List<ITextComponent> lines = Lists.newArrayList(new StringTextComponent(
+            List<ITextProperties> lines = Lists.newArrayList(new StringTextComponent(
               LanguageHandler.format("com.minecolonies.coremod.gui.field." + this.direction.getString())),
               new StringTextComponent(TextFormatting.GRAY + "" + TextFormatting.ITALIC + LanguageHandler.format(getDirectionalTranslationKey())
             ));
 
-            WindowField.this.renderTooltip(stack, lines, mouseX, mouseY);
+            WindowField.this.renderTooltip(stack, LanguageMap.getInstance().func_244260_a(lines), mouseX, mouseY);
         }
 
         /**

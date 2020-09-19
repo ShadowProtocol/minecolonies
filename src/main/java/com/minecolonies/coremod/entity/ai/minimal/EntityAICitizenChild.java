@@ -12,6 +12,7 @@ import com.minecolonies.api.entity.pathfinding.PathResult;
 import com.minecolonies.api.util.CompatibilityUtils;
 import com.minecolonies.api.util.Log;
 import com.minecolonies.coremod.MineColonies;
+import com.minecolonies.coremod.colony.colonyEvents.citizenEvents.CitizenGrownUpEvent;
 import com.minecolonies.coremod.colony.jobs.JobPupil;
 import com.minecolonies.coremod.entity.citizen.EntityCitizen;
 import com.minecolonies.coremod.research.MultiplierModifierResearchEffect;
@@ -146,10 +147,10 @@ public class EntityAICitizenChild extends Goal
         // Timer used for delays on actions
         if (actionTimer > 0)
         {
-            actionTimer -= MineColonies.getConfig().getCommon().updateRate.get();
+            actionTimer -= MineColonies.getConfig().getServer().updateRate.get();
         }
 
-        aiActiveTime += MineColonies.getConfig().getCommon().updateRate.get() * (child.getCitizenJobHandler().getColonyJob() instanceof JobPupil ? 2 : 1);
+        aiActiveTime += MineColonies.getConfig().getServer().updateRate.get() * (child.getCitizenJobHandler().getColonyJob() instanceof JobPupil ? 2 : 1);
 
         return false;
     }
@@ -299,7 +300,7 @@ public class EntityAICitizenChild extends Goal
                 return true;
             }
 
-            double growthModifier = MineColonies.getConfig().getCommon().growthModifier.get();
+            double growthModifier = MineColonies.getConfig().getServer().growthModifier.get();
             final MultiplierModifierResearchEffect effect =
               child.getCitizenColonyHandler().getColony().getResearchManager().getResearchEffects().getEffect(GROWTH, MultiplierModifierResearchEffect.class);
             if (effect != null)
@@ -310,7 +311,8 @@ public class EntityAICitizenChild extends Goal
             // 1/144 Chance to grow up, every 25 seconds = avg 1h. Set to half since this AI isnt always active, e.g. sleeping.  At 2h they directly grow
             if (rand.nextInt((int) (70 / growthModifier) + 1) == 0 || aiActiveTime > 70000 / growthModifier)
             {
-
+                child.getCitizenColonyHandler().getColony().getEventDescriptionManager().addEventDescription(new CitizenGrownUpEvent(child.getPosition(),
+                      child.getCitizenData().getName()));
                 LanguageHandler.sendPlayersMessage(child.getCitizenColonyHandler().getColony().getMessagePlayerEntities(),
                   "com.minecolonies.coremod.progress.childGrow",
                   child.getName().getString());

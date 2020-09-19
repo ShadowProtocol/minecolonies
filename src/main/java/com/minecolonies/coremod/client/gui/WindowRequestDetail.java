@@ -15,8 +15,10 @@ import com.minecolonies.api.util.constant.Constants;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.item.ItemStack;
+import net.minecraft.util.IReorderingProcessor;
 import net.minecraft.util.text.ITextProperties;
 import net.minecraft.util.text.StringTextComponent;
+import net.minecraft.util.text.Style;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -151,7 +153,7 @@ public class WindowRequestDetail extends Window implements ButtonHandler
         {
             final String labelText = "§r§0" + s;
             // Temporary workaround until Labels support multi-line rendering
-            final List<ITextProperties> multilineLabelStrings = mc.fontRenderer.func_238425_b_(new StringTextComponent(labelText), availableLabelWidth);
+            final List<ITextProperties> multilineLabelStrings = mc.fontRenderer.func_238420_b_().func_238362_b_(new StringTextComponent(labelText), availableLabelWidth, Style.EMPTY);
             for (final ITextProperties splitLabelText : multilineLabelStrings)
             {
                 final Label descriptionLabel = new Label();

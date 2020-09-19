@@ -14,6 +14,7 @@ import org.jetbrains.annotations.Nullable;
 
 import static com.minecolonies.api.util.constant.CitizenConstants.BASE_MOVEMENT_SPEED;
 import static com.minecolonies.api.util.constant.NbtTagConstants.TAG_TREE;
+import static com.minecolonies.coremod.colony.jobs.JobDeliveryman.BONUS_SPEED_PER_LEVEL;
 
 /**
  * The Lumberjack job class.

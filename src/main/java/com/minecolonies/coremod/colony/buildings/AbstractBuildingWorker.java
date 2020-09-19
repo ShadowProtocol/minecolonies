@@ -16,10 +16,7 @@ import com.minecolonies.api.crafting.IRecipeStorage;
 import com.minecolonies.api.crafting.ItemStorage;
 import com.minecolonies.api.entity.citizen.Skill;
 import com.minecolonies.api.inventory.container.ContainerCrafting;
-import com.minecolonies.api.util.InventoryUtils;
-import com.minecolonies.api.util.ItemStackUtils;
-import com.minecolonies.api.util.Log;
-import com.minecolonies.api.util.NBTUtils;
+import com.minecolonies.api.util.*;
 import com.minecolonies.api.util.constant.TypeConstants;
 import com.minecolonies.coremod.Network;
 import com.minecolonies.coremod.colony.buildings.views.AbstractBuildingView;
@@ -63,6 +60,7 @@ import java.util.stream.Collectors;
 
 import static com.minecolonies.api.research.util.ResearchConstants.RECIPES;
 import static com.minecolonies.api.util.constant.Constants.MOD_ID;
+import static com.minecolonies.api.util.constant.Constants.STACKSIZE;
 import static com.minecolonies.api.util.constant.NbtTagConstants.*;
 import static com.minecolonies.api.util.constant.ToolLevelConstants.TOOL_LEVEL_MAXIMUM;
 import static com.minecolonies.api.util.constant.ToolLevelConstants.TOOL_LEVEL_WOOD_OR_GOLD;
@@ -314,13 +312,13 @@ public abstract class AbstractBuildingWorker extends AbstractBuilding implements
         }
 
         // Check against excluded products
-        if (ItemTags.getCollection().getOrCreate(productsExcluded).contains(storage.getPrimaryOutput().getItem()))
+        if (TagUtils.getItem(productsExcluded).map(tag -> tag.contains(storage.getPrimaryOutput().getItem())).orElse(false))
         {
             return Optional.of(false);
         }
 
         // Check against allowed products
-        if (ItemTags.getCollection().getOrCreate(products).contains(storage.getPrimaryOutput().getItem()))
+        if (TagUtils.getItem(products).map(tag -> tag.contains(storage.getPrimaryOutput().getItem())).orElse(false))
         {
             return Optional.of(true);
         }
@@ -328,7 +326,7 @@ public abstract class AbstractBuildingWorker extends AbstractBuilding implements
         // Check against excluded ingredients
         for (final ItemStack stack : storage.getInput())
         {
-            if (ItemTags.getCollection().getOrCreate(ingredientsExcluded).contains(stack.getItem()))
+            if (TagUtils.getItem(ingredientsExcluded).map(tag -> tag.contains(stack.getItem())).orElse(false))
             {
                 return Optional.of(false);
             }
@@ -337,7 +335,7 @@ public abstract class AbstractBuildingWorker extends AbstractBuilding implements
         // Check against allowed ingredients
         for (final ItemStack stack : storage.getInput())
         {
-            if (ItemTags.getCollection().getOrCreate(ingredients).contains(stack.getItem()))
+            if (TagUtils.getItem(ingredients).map(tag -> tag.contains(stack.getItem())).orElse(false))
             {
                 return Optional.of(true);
             }
@@ -362,15 +360,14 @@ public abstract class AbstractBuildingWorker extends AbstractBuilding implements
         final double roll = citizen.getRandom().nextDouble() * 100;
 
         ItemStack reducedItem = null;
-
-        if(roll <= actualChance && !ItemTags.getCollection().getOrCreate(reducableProductExclusions).contains(recipe.getPrimaryOutput().getItem()))
+        if(roll <= actualChance && !TagUtils.getItem(reducableProductExclusions).map(tag -> tag.contains(recipe.getPrimaryOutput().getItem())).orElse(false))
         {
             final ArrayList<ItemStack> newRecipe = new ArrayList<>();
             boolean didReduction = false;
             for(ItemStorage input : inputs)
             {
                 // Check against excluded products
-                if (input.getAmount() > 1 && ItemTags.getCollection().getOrCreate(reducableIngredients).contains(input.getItem()))
+                if (input.getAmount() > 1 && ItemTags.createOptional(reducableIngredients).contains(input.getItem()))
                 {
                     reducedItem = input.getItemStack();
                     reducedItem.setCount(input.getAmount() - 1);

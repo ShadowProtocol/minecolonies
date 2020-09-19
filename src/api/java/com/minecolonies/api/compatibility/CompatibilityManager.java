@@ -199,7 +199,6 @@ public class CompatibilityManager implements ICompatibilityManager
 
         discoverSaplings();
         discoverOres();
-        Log.getLogger().info("Finished discovering oreBlocks");
         discoverCompostableItems();
         discoverPlantables();
         discoverLuckyOres();
@@ -249,7 +248,7 @@ public class CompatibilityManager implements ICompatibilityManager
             return true;
         }
 
-        for (final String string : MinecoloniesAPIProxy.getInstance().getConfig().getCommon().listOfCompostableItems.get())
+        for (final String string : MinecoloniesAPIProxy.getInstance().getConfig().getServer().listOfCompostableItems.get())
         {
             if (itemStack.getItem().getRegistryName().toString().equals(string))
             {
@@ -270,12 +269,12 @@ public class CompatibilityManager implements ICompatibilityManager
     @Override
     public boolean isPlantable(final ItemStack itemStack)
     {
-        if (itemStack.isEmpty() || itemStack.getItem() == Items.WITHER_ROSE)
+        if (itemStack.isEmpty() || itemStack.getItem() == Items.WITHER_ROSE || !(itemStack.getItem() instanceof BlockItem) )
         {
             return false;
         }
 
-        for (final String string : IMinecoloniesAPI.getInstance().getConfig().getCommon().listOfPlantables.get())
+        for (final String string : IMinecoloniesAPI.getInstance().getConfig().getServer().listOfPlantables.get())
         {
             if (itemStack.getItem().getRegistryName().toString().equals(string))
             {
@@ -296,7 +295,7 @@ public class CompatibilityManager implements ICompatibilityManager
             {
                 for (final ResourceLocation tag : itemStack.getItem().getTags())
                 {
-                    if (tag.toString().contains(split[1]) && itemStack.getItem().getRegistryName().getNamespace().equals(split[0]))
+                    if (tag.toString().contains(":" + split[1]) && itemStack.getItem().getRegistryName().getNamespace().equals(split[0]))
                     {
                         return true;
                     }
@@ -314,7 +313,7 @@ public class CompatibilityManager implements ICompatibilityManager
             return false;
         }
 
-        for (final String string : MinecoloniesAPIProxy.getInstance().getConfig().getCommon().luckyBlocks.get())
+        for (final String string : MinecoloniesAPIProxy.getInstance().getConfig().getServer().luckyBlocks.get())
         {
             if (itemStack.getItem().getRegistryName().toString().equals(string))
             {
@@ -513,7 +512,7 @@ public class CompatibilityManager implements ICompatibilityManager
     @Override
     public ItemStack getRandomLuckyOre(final double chanceBonus)
     {
-        if (random.nextDouble() * ONE_HUNDRED_PERCENT <= MinecoloniesAPIProxy.getInstance().getConfig().getCommon().luckyBlockChance.get() * chanceBonus)
+        if (random.nextDouble() * ONE_HUNDRED_PERCENT <= MinecoloniesAPIProxy.getInstance().getConfig().getServer().luckyBlockChance.get() * chanceBonus)
         {
             return luckyOres.get(random.nextInt(luckyOres.size())).getItemStack().copy();
         }
@@ -554,7 +553,7 @@ public class CompatibilityManager implements ICompatibilityManager
                                                     .map(stack -> ((BlockItem) stack.getItem()).getBlock())
                                                     .collect(Collectors.toList())));
 
-            for (final String oreString : MinecoloniesAPIProxy.getInstance().getConfig().getCommon().extraOres.get())
+            for (final String oreString : MinecoloniesAPIProxy.getInstance().getConfig().getServer().extraOres.get())
             {
                 final String[] split = oreString.split(":");
                 final Block block = ForgeRegistries.BLOCKS.getValue(new ResourceLocation(split[0], split[1]));
@@ -638,7 +637,7 @@ public class CompatibilityManager implements ICompatibilityManager
     {
         if (luckyOres.isEmpty())
         {
-            for (final String ore : MinecoloniesAPIProxy.getInstance().getConfig().getCommon().luckyOres.get())
+            for (final String ore : MinecoloniesAPIProxy.getInstance().getConfig().getServer().luckyOres.get())
             {
                 final String[] split = ore.split("!");
                 if (split.length < 2)
@@ -679,7 +678,7 @@ public class CompatibilityManager implements ICompatibilityManager
     {
         if (recruitmentCostsWeights.isEmpty())
         {
-            for (final String itemString : MinecoloniesAPIProxy.getInstance().getConfig().getCommon().configListRecruitmentItems.get())
+            for (final String itemString : MinecoloniesAPIProxy.getInstance().getConfig().getServer().configListRecruitmentItems.get())
             {
                 final String[] split = itemString.split(";");
                 if (split.length < 2)
@@ -716,7 +715,7 @@ public class CompatibilityManager implements ICompatibilityManager
     {
         if (diseases.isEmpty())
         {
-            for (final String disease : MinecoloniesAPIProxy.getInstance().getConfig().getCommon().diseases.get())
+            for (final String disease : MinecoloniesAPIProxy.getInstance().getConfig().getServer().diseases.get())
             {
                 final String[] split = disease.split(",");
                 if (split.length < 3)
@@ -765,7 +764,7 @@ public class CompatibilityManager implements ICompatibilityManager
      */
     private void discoverSifting()
     {
-        for (final String string : MinecoloniesAPIProxy.getInstance().getConfig().getCommon().sifterMeshes.get())
+        for (final String string : MinecoloniesAPIProxy.getInstance().getConfig().getServer().sifterMeshes.get())
         {
             final String[] mesh = string.split(",");
 
@@ -797,7 +796,7 @@ public class CompatibilityManager implements ICompatibilityManager
             }
         }
 
-        for (final String string : MinecoloniesAPIProxy.getInstance().getConfig().getCommon().siftableBlocks.get())
+        for (final String string : MinecoloniesAPIProxy.getInstance().getConfig().getServer().siftableBlocks.get())
         {
             try
             {
@@ -820,7 +819,7 @@ public class CompatibilityManager implements ICompatibilityManager
         }
 
         final Map<ItemStorage, Map<ItemStorage, Map<ItemStorage, Double>>> tempDrops = new HashMap<>();
-        for (final String string : MinecoloniesAPIProxy.getInstance().getConfig().getCommon().sifterDrops.get())
+        for (final String string : MinecoloniesAPIProxy.getInstance().getConfig().getServer().sifterDrops.get())
         {
             final String[] drop = string.split(",");
             if (drop.length != 4)
@@ -938,7 +937,7 @@ public class CompatibilityManager implements ICompatibilityManager
      */
     private void discoverEnchantments()
     {
-        for (final String string : MinecoloniesAPIProxy.getInstance().getConfig().getCommon().enchantments.get())
+        for (final String string : MinecoloniesAPIProxy.getInstance().getConfig().getServer().enchantments.get())
         {
             final String[] split = string.split(",");
             if (split.length != 4)
@@ -982,7 +981,7 @@ public class CompatibilityManager implements ICompatibilityManager
      */
     private void discoverCrusherModes()
     {
-        for (final String string : MinecoloniesAPIProxy.getInstance().getConfig().getCommon().crusherProduction.get())
+        for (final String string : MinecoloniesAPIProxy.getInstance().getConfig().getServer().crusherProduction.get())
         {
             final String[] split = string.split("!");
             if (split.length != 2)

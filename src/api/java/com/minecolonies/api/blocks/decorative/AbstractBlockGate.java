@@ -392,7 +392,7 @@ public abstract class AbstractBlockGate extends DoorBlock
     }
 
     @Override
-    public void toggleDoor(final World worldIn, @NotNull final BlockPos pos, final boolean open)
+    public void func_242663_a(final World worldIn, final BlockState state, @NotNull final BlockPos pos, final boolean open)
     {
         BlockState blockstate = worldIn.getBlockState(pos);
         if (blockstate.getBlock() == this && blockstate.get(OPEN) != open)
@@ -452,7 +452,7 @@ public abstract class AbstractBlockGate extends DoorBlock
         boolean powered = worldIn.isBlockPowered(pos);
         if (powered != state.get(OPEN))
         {
-            toggleDoor(worldIn, pos, powered);
+            func_242663_a(worldIn, state, pos, powered);
         }
     }
 

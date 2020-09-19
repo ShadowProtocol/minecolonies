@@ -241,7 +241,7 @@ public class RaidManager implements IRaiderManager
         for (int i = 0; i < raidCount; i++)
         {
             final BlockPos targetSpawnPoint = calculateSpawnLocation();
-            if (targetSpawnPoint == null || targetSpawnPoint.equals(colony.getCenter()) || targetSpawnPoint.getY() > MineColonies.getConfig().getCommon().maxYForBarbarians.get())
+            if (targetSpawnPoint == null || targetSpawnPoint.equals(colony.getCenter()) || targetSpawnPoint.getY() > MineColonies.getConfig().getServer().maxYForBarbarians.get())
             {
                 continue;
             }
@@ -258,7 +258,7 @@ public class RaidManager implements IRaiderManager
 
         for (final BlockPos targetSpawnPoint : spawnPoints)
         {
-            if (MineColonies.getConfig().getCommon().enableInDevelopmentFeatures.get())
+            if (MineColonies.getConfig().getServer().enableInDevelopmentFeatures.get())
             {
                 LanguageHandler.sendPlayersMessage(
                   colony.getMessagePlayerEntities(),
@@ -267,7 +267,7 @@ public class RaidManager implements IRaiderManager
 
             // No rotation till spawners are moved into schematics
             final int shipRotation = new Random().nextInt(3);
-            final String homeBiomePath = colony.getWorld().getBiome(colony.getCenter()).getRegistryName().getPath();
+            final String homeBiomePath = colony.getWorld().getBiome(colony.getCenter()).getCategory().getName();
             final int rand = colony.getWorld().rand.nextInt(100);
             if ((homeBiomePath.contains(TAIGA_BIOME_ID) || rand < IGNORE_BIOME_CHANCE) && ShipBasedRaiderUtils.canSpawnShipAt(colony,
               targetSpawnPoint,
@@ -291,7 +291,7 @@ public class RaidManager implements IRaiderManager
             }
             else
             {
-                final String biomePath = colony.getWorld().getBiome(targetSpawnPoint).getRegistryName().getPath();
+                final String biomePath = colony.getWorld().getBiome(targetSpawnPoint).getCategory().getName().toLowerCase();
                 final HordeRaidEvent event;
                 if (biomePath.contains(DESERT_BIOME_ID) || (rand > IGNORE_BIOME_CHANCE && rand < IGNORE_BIOME_CHANCE * 2))
                 {
@@ -529,7 +529,7 @@ public class RaidManager implements IRaiderManager
     @Override
     public int calculateRaiderAmount(final int raidLevel)
     {
-        return Math.min(MineColonies.getConfig().getCommon().maxBarbarianSize.get(),
+        return Math.min(MineColonies.getConfig().getServer().maxBarbarianSize.get(),
           (int) ((raidLevel / SPAWN_MODIFIER) * getRaidDifficultyModifier() * (1.0 + colony.getMessagePlayerEntities().size() * INCREASE_PER_PLAYER) * ((
             colony.getWorld().rand.nextDouble() * 0.5d) + 0.75)));
     }
@@ -604,7 +604,7 @@ public class RaidManager implements IRaiderManager
     public boolean canRaid()
     {
         return colony.getWorld().getDifficulty() != Difficulty.PEACEFUL
-                 && MineColonies.getConfig().getCommon().doBarbariansSpawn.get()
+                 && MineColonies.getConfig().getServer().doBarbariansSpawn.get()
                  && colony.getRaiderManager().canHaveRaiderEvents()
                  && !colony.getPackageManager().getImportantColonyPlayers().isEmpty();
     }
@@ -618,7 +618,7 @@ public class RaidManager implements IRaiderManager
             if (!colony.getRaiderManager().willRaidTonight())
             {
                 final boolean raid = raidThisNight(colony.getWorld(), colony);
-                if (MineColonies.getConfig().getCommon().enableInDevelopmentFeatures.get())
+                if (MineColonies.getConfig().getServer().enableInDevelopmentFeatures.get())
                 {
                     LanguageHandler.sendPlayersMessage(
                       colony.getImportantMessageEntityPlayers(),
@@ -626,7 +626,7 @@ public class RaidManager implements IRaiderManager
                 }
                 colony.getRaiderManager().setWillRaidTonight(raid);
 
-                if (colony.getWorld().getBiome(colony.getCenter()).getRegistryName().getPath().contains("desert") && colony.getWorld().isRaining())
+                if (colony.getWorld().getBiome(colony.getCenter()).getCategory().getName().toLowerCase().contains("desert") && colony.getWorld().isRaining())
                 {
                     return true;
                 }
@@ -637,7 +637,7 @@ public class RaidManager implements IRaiderManager
         {
             colony.getRaiderManager().setHasRaidBeenCalculated(false);
             colony.getRaiderManager().setWillRaidTonight(false);
-            if (MineColonies.getConfig().getCommon().enableInDevelopmentFeatures.get())
+            if (MineColonies.getConfig().getServer().enableInDevelopmentFeatures.get())
             {
                 LanguageHandler.sendPlayersMessage(
                   colony.getMessagePlayerEntities(),
@@ -679,18 +679,18 @@ public class RaidManager implements IRaiderManager
      */
     private boolean raidThisNight(final World world, final IColony colony)
     {
-        if (nightsSinceLastRaid < MineColonies.getConfig().getCommon().minimumNumberOfNightsBetweenRaids.get())
+        if (nightsSinceLastRaid < MineColonies.getConfig().getServer().minimumNumberOfNightsBetweenRaids.get())
         {
             return false;
         }
 
-        if (nightsSinceLastRaid > MineColonies.getConfig().getCommon().averageNumberOfNightsBetweenRaids.get() + 2)
+        if (nightsSinceLastRaid > MineColonies.getConfig().getServer().averageNumberOfNightsBetweenRaids.get() + 2)
         {
             return true;
         }
 
-        return world.rand.nextDouble() < 1.0 / (MineColonies.getConfig().getCommon().averageNumberOfNightsBetweenRaids.get() - MineColonies.getConfig()
-                                                                                                                                 .getCommon().minimumNumberOfNightsBetweenRaids.get());
+        return world.rand.nextDouble() < 1.0 / (MineColonies.getConfig().getServer().averageNumberOfNightsBetweenRaids.get() - MineColonies.getConfig()
+                                                                                                                                 .getServer().minimumNumberOfNightsBetweenRaids.get());
     }
 
     @Override
@@ -721,7 +721,7 @@ public class RaidManager implements IRaiderManager
     @Override
     public double getRaidDifficultyModifier()
     {
-        return (raidDifficulty / (double) NORMAL_RAID_DIFFICULTY) * (MinecoloniesAPIProxy.getInstance().getConfig().getCommon().barbarianHordeDifficulty.get()
+        return (raidDifficulty / (double) NORMAL_RAID_DIFFICULTY) * (MinecoloniesAPIProxy.getInstance().getConfig().getServer().barbarianHordeDifficulty.get()
                                                                        / (double) DEFAULT_BARBARIAN_DIFFICULTY) * (colony.getWorld().getDifficulty().getId() / 2d);
     }
 

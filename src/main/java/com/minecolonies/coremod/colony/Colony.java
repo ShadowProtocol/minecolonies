@@ -23,6 +23,7 @@ import com.minecolonies.api.util.BlockPosUtil;
 import com.minecolonies.api.util.Log;
 import com.minecolonies.api.util.WorldUtil;
 import com.minecolonies.api.util.constant.Constants;
+import com.minecolonies.api.util.constant.NbtTagConstants;
 import com.minecolonies.api.util.constant.Suppression;
 import com.minecolonies.coremod.MineColonies;
 import com.minecolonies.coremod.Network;
@@ -129,6 +130,11 @@ public class Colony implements IColony
      * Event manager of the colony.
      */
     private final IEventManager eventManager = new EventManager(this);
+
+    /**
+     * Event description manager of the colony.
+     */
+    private final IEventDescriptionManager eventDescManager = new EventDescriptionManager(this);
 
     /**
      * The colony package manager.
@@ -309,7 +315,7 @@ public class Colony implements IColony
         }
         this.permissions = new Permissions(this);
 
-        for (final String s : MineColonies.getConfig().getCommon().freeToInteractBlocks.get())
+        for (final String s : MineColonies.getConfig().getServer().freeToInteractBlocks.get())
         {
             try
             {
@@ -661,6 +667,7 @@ public class Colony implements IColony
         }
 
         eventManager.readFromNBT(compound);
+        eventDescManager.deserializeNBT(compound.getCompound(NbtTagConstants.TAG_EVENT_DESC_MANAGER));
 
         if (compound.keySet().contains(TAG_RESEARCH))
         {
@@ -795,6 +802,7 @@ public class Colony implements IColony
 
         progressManager.write(compound);
         eventManager.writeToNBT(compound);
+        compound.put(NbtTagConstants.TAG_EVENT_DESC_MANAGER, eventDescManager.serializeNBT());
         raidManager.write(compound);
 
         @NotNull final CompoundNBT researchManagerCompound = new CompoundNBT();
@@ -1433,15 +1441,16 @@ public class Colony implements IColony
         return raidManager;
     }
 
-    /**
-     * Get the event manager of the colony.
-     *
-     * @return the event manager.
-     */
     @Override
     public IEventManager getEventManager()
     {
         return eventManager;
+    }
+
+    @Override
+    public IEventDescriptionManager getEventDescriptionManager()
+    {
+        return eventDescManager;
     }
 
     /**
@@ -1480,7 +1489,7 @@ public class Colony implements IColony
     public void addVisitingPlayer(final PlayerEntity player)
     {
         final Rank rank = getPermissions().getRank(player);
-        if (rank != Rank.OWNER && rank != Rank.OFFICER && !visitingPlayers.contains(player) && MineColonies.getConfig().getCommon().sendEnteringLeavingMessages.get())
+        if (rank != Rank.OWNER && rank != Rank.OFFICER && !visitingPlayers.contains(player) && MineColonies.getConfig().getServer().sendEnteringLeavingMessages.get())
         {
             visitingPlayers.add(player);
             LanguageHandler.sendPlayerMessage(player, ENTERING_COLONY_MESSAGE, this.getPermissions().getOwnerName());
@@ -1491,7 +1500,7 @@ public class Colony implements IColony
     @Override
     public void removeVisitingPlayer(final PlayerEntity player)
     {
-        if (!getMessagePlayerEntities().contains(player) && MineColonies.getConfig().getCommon().sendEnteringLeavingMessages.get())
+        if (!getMessagePlayerEntities().contains(player) && MineColonies.getConfig().getServer().sendEnteringLeavingMessages.get())
         {
             visitingPlayers.remove(player);
             LanguageHandler.sendPlayerMessage(player, LEAVING_COLONY_MESSAGE, this.getPermissions().getOwnerName());

@@ -119,6 +119,7 @@ public class EntityAIRanger extends AbstractEntityAIGuard<JobRanger, AbstractBui
           new AITarget(GUARD_ATTACK_RANGED, this::attackRanged, 10)
         );
         toolsNeeded.add(ToolType.BOW);
+        worker.getNavigator().getPathingOptions().withJumpDropCost(0.95D);
     }
 
     @Override
@@ -505,7 +506,7 @@ public class EntityAIRanger extends AbstractEntityAIGuard<JobRanger, AbstractBui
         if (worker.getCitizenData() != null)
         {
             int enchantDmg = 0;
-            if (MineColonies.getConfig().getCommon().rangerEnchants.get())
+            if (MineColonies.getConfig().getServer().rangerEnchants.get())
             {
                 final ItemStack heldItem = worker.getHeldItem(Hand.MAIN_HAND);
                 // Normalize to +1 dmg
@@ -513,9 +514,9 @@ public class EntityAIRanger extends AbstractEntityAIGuard<JobRanger, AbstractBui
                 enchantDmg += EnchantmentHelper.getEnchantmentLevel(Enchantments.POWER, heldItem);
             }
 
-            return (RANGER_BASE_DMG + getLevelDamage() + enchantDmg) * MineColonies.getConfig().getCommon().rangerDamageMult.get();
+            return (RANGER_BASE_DMG + getLevelDamage() + enchantDmg) * MineColonies.getConfig().getServer().rangerDamageMult.get();
         }
-        return RANGER_BASE_DMG * MineColonies.getConfig().getCommon().rangerDamageMult.get();
+        return RANGER_BASE_DMG * MineColonies.getConfig().getServer().rangerDamageMult.get();
     }
 
     /**

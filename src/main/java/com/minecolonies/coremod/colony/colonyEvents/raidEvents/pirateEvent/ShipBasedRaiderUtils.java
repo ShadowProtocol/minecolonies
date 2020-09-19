@@ -23,8 +23,7 @@ import org.jetbrains.annotations.NotNull;
 
 import java.util.List;
 
-import static com.minecolonies.api.colony.colonyEvents.NBTTags.TAG_EVENT_ID;
-import static com.minecolonies.api.util.constant.NbtTagConstants.TAG_COLONY_ID;
+import static com.minecolonies.api.util.constant.NbtTagConstants.*;
 
 /**
  * Utils for Colony pirate events
@@ -129,7 +128,7 @@ public final class ShipBasedRaiderUtils
      */
     public static boolean canSpawnShipAt(final IColony colony, final BlockPos spawnPoint, final int raidLevel, final int rotation, final String shipName)
     {
-        if (spawnPoint.equals(colony.getCenter()) || spawnPoint.getY() > MineColonies.getConfig().getCommon().maxYForBarbarians.get())
+        if (spawnPoint.equals(colony.getCenter()) || spawnPoint.getY() > MineColonies.getConfig().getServer().maxYForBarbarians.get())
         {
             return false;
         }

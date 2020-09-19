@@ -41,7 +41,7 @@ import org.jetbrains.annotations.NotNull;
 
 import java.util.*;
 
-import static com.minecolonies.api.colony.colonyEvents.NBTTags.*;
+import static com.minecolonies.api.util.constant.NbtTagConstants.*;
 import static com.minecolonies.api.util.constant.TranslationConstants.*;
 
 /**
@@ -108,7 +108,7 @@ public abstract class AbstractShipRaidEvent implements IColonyRaidEvent, IColony
     /**
      * The days the event lasts
      */
-    private int daysToGo = MineColonies.getConfig().getCommon().daysUntilPirateshipsDespawn.get();
+    private int daysToGo = MineColonies.getConfig().getServer().daysUntilPirateshipsDespawn.get();
 
     /**
      * Reference to the currently active pirates for this event.
@@ -150,7 +150,7 @@ public abstract class AbstractShipRaidEvent implements IColonyRaidEvent, IColony
     public void onStart()
     {
         status = EventStatus.PREPARING;
-        daysToGo = MineColonies.getConfig().getCommon().daysUntilPirateshipsDespawn.get();
+        daysToGo = MineColonies.getConfig().getServer().daysUntilPirateshipsDespawn.get();
 
         final CreativeBuildingStructureHandler structure =
           new CreativeBuildingStructureHandler(colony.getWorld(),
@@ -437,8 +437,9 @@ public abstract class AbstractShipRaidEvent implements IColonyRaidEvent, IColony
     }
 
     @Override
-    public CompoundNBT writeToNBT(final CompoundNBT compound)
+    public CompoundNBT serializeNBT()
     {
+        CompoundNBT compound = new CompoundNBT();
         compound.putInt(TAG_EVENT_ID, id);
         compound.putInt(TAG_DAYS_LEFT, daysToGo);
         compound.putInt(TAG_EVENT_STATUS, status.ordinal());
@@ -460,7 +461,7 @@ public abstract class AbstractShipRaidEvent implements IColonyRaidEvent, IColony
     }
 
     @Override
-    public void readFromNBT(final CompoundNBT compound)
+    public void deserializeNBT(final CompoundNBT compound)
     {
         id = compound.getInt(TAG_EVENT_ID);
         status = EventStatus.values()[compound.getInt(TAG_EVENT_STATUS)];

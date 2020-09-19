@@ -12,6 +12,7 @@ import com.minecolonies.coremod.colony.jobs.JobMiner;
 import com.minecolonies.coremod.research.AdditionModifierResearchEffect;
 import net.minecraft.block.BedBlock;
 import net.minecraft.block.BlockState;
+import net.minecraft.block.Blocks;
 import net.minecraft.block.HorizontalBlock;
 import net.minecraft.entity.Pose;
 import net.minecraft.tags.BlockTags;
@@ -199,7 +200,7 @@ public class CitizenSleepHandler implements ICitizenSleepHandler
         final BlockPos spawn;
         if (!getBedLocation().equals(BlockPos.ZERO) && citizen.world.getBlockState(getBedLocation()).getBlock().isIn(BlockTags.BEDS))
         {
-            final Optional<Vector3d> spawnVec = BedBlock.getBedSpawnPosition(ModEntities.CITIZEN, citizen.world, getBedLocation(), 0);
+            final Optional<Vector3d> spawnVec = Blocks.RED_BED.getBedSpawnPosition(ModEntities.CITIZEN, citizen.world.getBlockState(getBedLocation()), citizen.world, getBedLocation(), 0, citizen);
             spawn = spawnVec.map(BlockPos::new).orElseGet(() -> getBedLocation().up());
         }
         else

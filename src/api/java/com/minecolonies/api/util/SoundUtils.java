@@ -1,6 +1,5 @@
 package com.minecolonies.api.util;
 
-import com.minecolonies.api.MinecoloniesAPIProxy;
 import com.minecolonies.api.colony.ICitizenData;
 import com.minecolonies.api.sounds.EventType;
 import net.minecraft.util.SoundCategory;
@@ -13,7 +12,7 @@ import org.jetbrains.annotations.Nullable;
 import java.util.Map;
 import java.util.Random;
 
-import static com.minecolonies.api.sounds.ModSoundEvents.SOUND_EVENTS;
+import static com.minecolonies.api.sounds.ModSoundEvents.CITIZEN_SOUND_EVENTS;
 
 /**
  * Utilities for playing sounds.
@@ -155,19 +154,14 @@ public final class SoundUtils
             return;
         }
 
-        if (MinecoloniesAPIProxy.getInstance().getConfig().getCommon().disableCitizenVoices.get())
-        {
-            return;
-        }
-
         final Map<EventType, Tuple<SoundEvent, SoundEvent>> map;
         if (citizenData.getJob() != null)
         {
-            map = SOUND_EVENTS.get(citizenData.getJob().getJobRegistryEntry().getRegistryName().getPath());
+            map = CITIZEN_SOUND_EVENTS.get(citizenData.getJob().getJobRegistryEntry().getRegistryName().getPath());
         }
         else
         {
-            map = SOUND_EVENTS.get(citizenData.isChild() ? "child" : "citizen");
+            map = CITIZEN_SOUND_EVENTS.get(citizenData.isChild() ? "child" : "citizen");
         }
 
         final SoundEvent event = citizenData.isFemale() ? map.get(type).getB() : map.get(type).getA();

@@ -80,8 +80,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import static com.minecolonies.api.colony.colonyEvents.NBTTags.TAG_EVENT_ID;
-import static com.minecolonies.api.util.constant.NbtTagConstants.TAG_COLONY_ID;
+import static com.minecolonies.api.util.constant.NbtTagConstants.*;
 import static com.minecolonies.api.util.constant.TranslationConstants.CANT_PLACE_COLONY_IN_OTHER_DIM;
 import static com.minecolonies.coremod.MineColonies.CLOSE_COLONY_CAP;
 import static net.minecraftforge.eventbus.api.EventPriority.HIGHEST;
@@ -119,7 +118,7 @@ public class EventHandler
     {
         if (!event.getWorld().isRemote)
         {
-            if (MineColonies.getConfig().getCommon().mobAttackCitizens.get() && (event.getEntity() instanceof IMob) && !(event.getEntity() instanceof LlamaEntity) && !(event.getEntity() instanceof EndermanEntity))
+            if (MineColonies.getConfig().getServer().mobAttackCitizens.get() && (event.getEntity() instanceof IMob) && !(event.getEntity() instanceof LlamaEntity) && !(event.getEntity() instanceof EndermanEntity))
             {
                 ((MobEntity) event.getEntity()).targetSelector.addGoal(6, new NearestAttackableTargetGoal<>((MobEntity) event.getEntity(), EntityCitizen.class, true));
                 ((MobEntity) event.getEntity()).targetSelector.addGoal(7, new NearestAttackableTargetGoal<>((MobEntity) event.getEntity(), EntityMercenary.class, true));
@@ -435,7 +434,7 @@ public class EventHandler
     @SubscribeEvent
     public static void onEnteringChunkEntity(@NotNull final EntityEvent.EnteringChunk event)
     {
-        if (MineColonies.getConfig().getCommon().pvp_mode.get() && event.getEntity() instanceof EntityCitizen)
+        if (MineColonies.getConfig().getServer().pvp_mode.get() && event.getEntity() instanceof EntityCitizen)
         {
             if (event.getEntity().world == null
                   || !WorldUtil.isEntityChunkLoaded(event.getEntity().world, new ChunkPos(event.getNewChunkX(), event.getNewChunkZ()))
@@ -472,13 +471,18 @@ public class EventHandler
     @SubscribeEvent
     public static void onBlockBreak(@NotNull final BlockEvent.BreakEvent event)
     {
+        if (!(event.getWorld() instanceof World))
+            return;
+
+        final World world = (World) event.getWorld();
+
         if (event.getState().getBlock() instanceof SpawnerBlock)
         {
             final MobSpawnerTileEntity spawner = (MobSpawnerTileEntity) event.getWorld().getTileEntity(event.getPos());
 
             final IColony colony = IColonyManager.getInstance()
                                      .getColonyByDimension(spawner.getSpawnerBaseLogic().spawnData.getNbt().getInt(TAG_COLONY_ID),
-                                       event.getWorld().getWorld().getDimensionKey().func_240901_a_());
+                                       world.getDimensionKey().func_240901_a_());
             if (colony != null)
             {
                 colony.getEventManager().onTileEntityBreak(spawner.getSpawnerBaseLogic().spawnData.getNbt().getInt(TAG_EVENT_ID), spawner);
@@ -557,7 +561,7 @@ public class EventHandler
                     return;
                 }
 
-                if (MineColonies.getConfig().getCommon().suggestBuildToolPlacement.get())
+                if (MineColonies.getConfig().getServer().suggestBuildToolPlacement.get())
                 {
                     final ItemStack stack = new ItemStack(block);
                     if (!stack.isEmpty() && !world.isRemote)
@@ -633,7 +637,7 @@ public class EventHandler
         {
             if (event.getWorld().isRemote)
             {
-                event.setCanceled(MineColonies.getConfig().getCommon().suggestBuildToolPlacement.get());
+                event.setCanceled(MineColonies.getConfig().getServer().suggestBuildToolPlacement.get());
             }
             else
             {
@@ -653,7 +657,7 @@ public class EventHandler
      */
     public static boolean onBlockHutPlaced(@NotNull final World world, @NotNull final PlayerEntity player, final Block block, final BlockPos pos)
     {
-        if (!MineColonies.getConfig().getCommon().allowOtherDimColonies.get() && !world.getDimensionKey().func_240901_a_().equals(World.OVERWORLD.func_240901_a_()))
+        if (!MineColonies.getConfig().getServer().allowOtherDimColonies.get() && !world.getDimensionKey().func_240901_a_().equals(World.OVERWORLD.func_240901_a_()))
         {
             LanguageHandler.sendPlayerMessage(player, CANT_PLACE_COLONY_IN_OTHER_DIM);
             return false;
@@ -711,7 +715,7 @@ public class EventHandler
 
         // Global events
         // Halloween ghost mode
-        if (event.getWorld().isRemote() && MineColonies.getConfig().getCommon().holidayFeatures.get() &&
+        if (event.getWorld().isRemote() && MineColonies.getConfig().getServer().holidayFeatures.get() &&
               (LocalDateTime.now().getDayOfMonth() == 31 && LocalDateTime.now().getMonth() == Month.OCTOBER
                  || LocalDateTime.now().getDayOfMonth() == 1 && LocalDateTime.now().getMonth() == Month.NOVEMBER
                  || LocalDateTime.now().getDayOfMonth() == 2 && LocalDateTime.now().getMonth() == Month.NOVEMBER))

@@ -7,6 +7,9 @@ import net.minecraftforge.common.ForgeConfigSpec;
  */
 public class ClientConfiguration extends AbstractConfiguration
 {
+    public final ForgeConfigSpec.BooleanValue citizenVoices;
+    public final ForgeConfigSpec.BooleanValue pathfindingDebugDraw;
+
     /**
      * Builds client configuration.
      *
@@ -14,6 +17,12 @@ public class ClientConfiguration extends AbstractConfiguration
      */
     protected ClientConfiguration(final ForgeConfigSpec.Builder builder)
     {
+        createCategory(builder, "gameplay");
+        citizenVoices = defineBoolean(builder, "citizenvoices", true);
 
+        swapToCategory(builder, "pathfinding");
+        pathfindingDebugDraw = defineBoolean(builder, "pathfindingdebugdraw", false);
+
+        finishCategory(builder);
     }
 }
