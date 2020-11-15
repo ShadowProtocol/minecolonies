@@ -80,7 +80,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import static com.minecolonies.api.util.constant.NbtTagConstants.*;
+import static com.minecolonies.api.util.constant.NbtTagConstants.TAG_COLONY_ID;
+import static com.minecolonies.api.util.constant.NbtTagConstants.TAG_EVENT_ID;
 import static com.minecolonies.api.util.constant.TranslationConstants.CANT_PLACE_COLONY_IN_OTHER_DIM;
 import static com.minecolonies.coremod.MineColonies.CLOSE_COLONY_CAP;
 import static net.minecraftforge.eventbus.api.EventPriority.HIGHEST;
@@ -118,7 +119,8 @@ public class EventHandler
     {
         if (!event.getWorld().isRemote)
         {
-            if (MineColonies.getConfig().getServer().mobAttackCitizens.get() && (event.getEntity() instanceof IMob) && !(event.getEntity() instanceof LlamaEntity) && !(event.getEntity() instanceof EndermanEntity))
+            if (MineColonies.getConfig().getServer().mobAttackCitizens.get() && (event.getEntity() instanceof IMob) && !(event.getEntity() instanceof LlamaEntity)
+                  && !(event.getEntity() instanceof EndermanEntity))
             {
                 ((MobEntity) event.getEntity()).targetSelector.addGoal(6, new NearestAttackableTargetGoal<>((MobEntity) event.getEntity(), EntityCitizen.class, true));
                 ((MobEntity) event.getEntity()).targetSelector.addGoal(7, new NearestAttackableTargetGoal<>((MobEntity) event.getEntity(), EntityMercenary.class, true));
@@ -330,10 +332,13 @@ public class EventHandler
                     oldColony.removeVisitingPlayer(player);
                     oldColony.getPackageManager().removeCloseSubscriber(player);
                 }
+            }
 
-                // Add visiting/subscriber to new colony
+            // Add visiting/subscriber to new colony
+            if (newCloseColonies.getOwningColony() != 0)
+            {
                 final IColony newColony = IColonyManager.getInstance().getColonyByWorld(newCloseColonies.getOwningColony(), world);
-                if (newColony != null)
+                if (newColony != null && !newColony.getPackageManager().getCloseSubscribers().contains(player))
                 {
                     newColony.addVisitingPlayer(player);
                     newColony.getPackageManager().addCloseSubscriber(player);
@@ -387,7 +392,7 @@ public class EventHandler
             final IColonyTagCapability cap = chunk.getCapability(CLOSE_COLONY_CAP, null).orElse(null);
             if (cap != null && cap.getOwningColony() != 0)
             {
-                IColony colony = IColonyManager.getInstance().getColonyByDimension(cap.getOwningColony(), player.world.getDimensionKey().func_240901_a_());
+                IColony colony = IColonyManager.getInstance().getColonyByDimension(cap.getOwningColony(), player.world.getDimensionKey().getLocation());
                 if (colony != null)
                 {
                     colony.addVisitingPlayer(player);
@@ -482,7 +487,7 @@ public class EventHandler
 
             final IColony colony = IColonyManager.getInstance()
                                      .getColonyByDimension(spawner.getSpawnerBaseLogic().spawnData.getNbt().getInt(TAG_COLONY_ID),
-                                       world.getDimensionKey().func_240901_a_());
+                                       world.getDimensionKey().getLocation());
             if (colony != null)
             {
                 colony.getEventManager().onTileEntityBreak(spawner.getSpawnerBaseLogic().spawnData.getNbt().getInt(TAG_EVENT_ID), spawner);
@@ -657,7 +662,7 @@ public class EventHandler
      */
     public static boolean onBlockHutPlaced(@NotNull final World world, @NotNull final PlayerEntity player, final Block block, final BlockPos pos)
     {
-        if (!MineColonies.getConfig().getServer().allowOtherDimColonies.get() && !world.getDimensionKey().func_240901_a_().equals(World.OVERWORLD.func_240901_a_()))
+        if (!MineColonies.getConfig().getServer().allowOtherDimColonies.get() && !world.getDimensionKey().getLocation().equals(World.OVERWORLD.getLocation()))
         {
             LanguageHandler.sendPlayerMessage(player, CANT_PLACE_COLONY_IN_OTHER_DIM);
             return false;

@@ -17,11 +17,12 @@ import com.minecolonies.api.inventory.container.ContainerCitizenInventory;
 import com.minecolonies.api.util.BlockPosUtil;
 import com.minecolonies.api.util.CompatibilityUtils;
 import com.minecolonies.api.util.ItemStackUtils;
+import com.minecolonies.api.util.Log;
 import com.minecolonies.api.util.constant.TypeConstants;
 import com.minecolonies.coremod.MineColonies;
 import com.minecolonies.coremod.Network;
-import com.minecolonies.coremod.colony.buildings.workerbuildings.BuildingTavern;
-import com.minecolonies.coremod.entity.ai.minimal.EntityAIOpenFenceGate;
+import com.minecolonies.coremod.colony.buildings.modules.TavernBuildingModule;
+import com.minecolonies.coremod.entity.ai.minimal.EntityAIInteractToggleAble;
 import com.minecolonies.coremod.entity.ai.minimal.EntityAIVisitor;
 import com.minecolonies.coremod.entity.citizen.citizenhandlers.*;
 import com.minecolonies.coremod.entity.pathfinding.EntityCitizenWalkToProxy;
@@ -51,6 +52,7 @@ import org.jetbrains.annotations.Nullable;
 import static com.minecolonies.api.util.constant.CitizenConstants.TICKS_20;
 import static com.minecolonies.api.util.constant.Constants.*;
 import static com.minecolonies.api.util.constant.NbtTagConstants.*;
+import static com.minecolonies.coremod.entity.ai.minimal.EntityAIInteractToggleAble.*;
 
 /**
  * Visitor citizen entity
@@ -155,7 +157,7 @@ public class VisitorCitizen extends AbstractEntityCitizen
         int priority = 0;
         this.goalSelector.addGoal(priority, new SwimGoal(this));
         this.goalSelector.addGoal(++priority, new OpenDoorGoal(this, true));
-        this.goalSelector.addGoal(priority, new EntityAIOpenFenceGate(this, true));
+        this.goalSelector.addGoal(priority, new EntityAIInteractToggleAble(this, FENCE_TOGGLE, TRAP_TOGGLE, DOOR_TOGGLE));
         this.goalSelector.addGoal(++priority, new LookAtWithoutMovingGoal(this, PlayerEntity.class, WATCH_CLOSEST2, 1.0F));
         this.goalSelector.addGoal(++priority, new LookAtWithoutMovingGoal(this, EntityCitizen.class, WATCH_CLOSEST2_FAR, WATCH_CLOSEST2_FAR_CHANCE));
         this.goalSelector.addGoal(++priority, new LookAtGoal(this, LivingEntity.class, WATCH_CLOSEST));
@@ -180,9 +182,10 @@ public class VisitorCitizen extends AbstractEntityCitizen
             if (damageSource.getTrueSource() instanceof LivingEntity && damage > 1.01f)
             {
                 final IBuilding home = getCitizenData().getHomeBuilding();
-                if (home instanceof BuildingTavern)
+                if (home.hasModule(TavernBuildingModule.class))
                 {
-                    for (final Integer id : ((BuildingTavern) home).getExternalCitizens())
+                    final TavernBuildingModule module = home.getModule(TavernBuildingModule.class).get();
+                    for (final Integer id : module.getExternalCitizens())
                     {
                         ICitizenData data = citizenColonyHandler.getColony().getVisitorManager().getCivilian(id);
                         if (data != null && data.getEntity().isPresent() && data.getEntity().get().getRevengeTarget() == null)
@@ -526,7 +529,7 @@ public class VisitorCitizen extends AbstractEntityCitizen
     @Override
     public ActionResultType func_233661_c_(final PlayerEntity player, @NotNull final Hand hand)
     {
-        final IColonyView iColonyView = IColonyManager.getInstance().getColonyView(citizenColonyHandler.getColonyId(), player.world.getDimensionKey().func_240901_a_());
+        final IColonyView iColonyView = IColonyManager.getInstance().getColonyView(citizenColonyHandler.getColonyId(), player.world.getDimensionKey().getLocation());
         if (iColonyView != null && !iColonyView.getPermissions().hasPermission(player, Action.ACCESS_HUTS))
         {
             return ActionResultType.FAIL;
@@ -563,7 +566,7 @@ public class VisitorCitizen extends AbstractEntityCitizen
             citizenColonyHandler.updateColonyClient();
             if (citizenColonyHandler.getColonyId() != 0 && citizenId != 0)
             {
-                final IColonyView colonyView = IColonyManager.getInstance().getColonyView(citizenColonyHandler.getColonyId(), world.getDimensionKey().func_240901_a_());
+                final IColonyView colonyView = IColonyManager.getInstance().getColonyView(citizenColonyHandler.getColonyId(), world.getDimensionKey().getLocation());
                 if (colonyView != null)
                 {
                     this.citizenDataView = colonyView.getVisitor(citizenId);
@@ -605,7 +608,7 @@ public class VisitorCitizen extends AbstractEntityCitizen
             citizenColonyHandler.updateColonyClient();
             if (citizenColonyHandler.getColonyId() != 0 && citizenId != 0 && getOffsetTicks() % TICKS_20 == 0)
             {
-                final IColonyView colonyView = IColonyManager.getInstance().getColonyView(citizenColonyHandler.getColonyId(), world.getDimensionKey().func_240901_a_());
+                final IColonyView colonyView = IColonyManager.getInstance().getColonyView(citizenColonyHandler.getColonyId(), world.getDimensionKey().getLocation());
                 if (colonyView != null)
                 {
                     this.citizenDataView = colonyView.getVisitor(citizenId);
@@ -659,9 +662,9 @@ public class VisitorCitizen extends AbstractEntityCitizen
             if (colony != null && getCitizenData() != null)
             {
                 colony.getVisitorManager().removeCivilian(getCitizenData());
-                if (getCitizenData().getHomeBuilding() instanceof BuildingTavern)
+                if (getCitizenData().getHomeBuilding() instanceof TavernBuildingModule)
                 {
-                    BuildingTavern tavern = (BuildingTavern) getCitizenData().getHomeBuilding();
+                    TavernBuildingModule tavern = (TavernBuildingModule) getCitizenData().getHomeBuilding();
                     tavern.setNoVisitorTime(world.getRandom().nextInt(5000) + 30000);
                 }
 
@@ -686,6 +689,23 @@ public class VisitorCitizen extends AbstractEntityCitizen
             if (ItemStackUtils.getSize(itemstack) > 0)
             {
                 citizenItemHandler.entityDropItem(itemstack);
+            }
+        }
+    }
+
+    // TODO:REMOVE DEBUG
+    @Override
+    public void setRawPosition(double x, double y, double z)
+    {
+        super.setRawPosition(x, y, z);
+        if (citizenStatusHandler != null && x < 1 && x > -1 && z < 1 && z > -1)
+        {
+            Log.getLogger().error("Visitor entity set to zero pos, report to mod author:", new Exception());
+            remove();
+
+            if (getCitizenData() != null && citizenColonyHandler.getColony() != null)
+            {
+                citizenColonyHandler.getColony().getVisitorManager().removeCivilian(getCitizenData());
             }
         }
     }

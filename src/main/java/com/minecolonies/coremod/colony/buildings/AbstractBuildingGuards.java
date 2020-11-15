@@ -9,6 +9,7 @@ import com.minecolonies.api.colony.IColonyView;
 import com.minecolonies.api.colony.buildings.HiringMode;
 import com.minecolonies.api.colony.buildings.IBuilding;
 import com.minecolonies.api.colony.buildings.IGuardBuilding;
+import com.minecolonies.api.colony.buildings.IWorkerLivingBuilding;
 import com.minecolonies.api.colony.buildings.views.MobEntryView;
 import com.minecolonies.api.colony.guardtype.GuardType;
 import com.minecolonies.api.colony.guardtype.registry.IGuardTypeDataManager;
@@ -62,9 +63,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.*;
-import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
-import java.util.stream.Collectors;
 
 import static com.minecolonies.api.research.util.ResearchConstants.ARROW_ITEMS;
 import static com.minecolonies.api.util.constant.CitizenConstants.*;
@@ -74,7 +73,7 @@ import static com.minecolonies.api.util.constant.ToolLevelConstants.TOOL_LEVEL_W
  * Abstract class for Guard huts.
  */
 @SuppressWarnings({"squid:MaximumInheritanceDepth", "squid:S1448"})
-public abstract class AbstractBuildingGuards extends AbstractBuildingWorker implements IGuardBuilding
+public abstract class AbstractBuildingGuards extends AbstractBuildingWorker implements IGuardBuilding, IWorkerLivingBuilding
 {
     ////// --------------------------- NBTConstants --------------------------- \\\\\\
     private static final String NBT_TASK           = "TASK";
@@ -1212,7 +1211,7 @@ public abstract class AbstractBuildingGuards extends AbstractBuildingWorker impl
             if (entry.getValue().getClassification() == EntityClassification.MONSTER)
             {
                 i++;
-                mobsToAttack.put(entry.getKey().func_240901_a_(), new MobEntryView(entry.getKey().func_240901_a_(), true, i));
+                mobsToAttack.put(entry.getKey().getLocation(), new MobEntryView(entry.getKey().getLocation(), true, i));
             }
             else
             {
@@ -1221,7 +1220,7 @@ public abstract class AbstractBuildingGuards extends AbstractBuildingWorker impl
                     if (entry.getKey() != null && entry.getKey().toString().equals(location))
                     {
                         i++;
-                        mobsToAttack.put(entry.getKey().func_240901_a_(), new MobEntryView(entry.getKey().func_240901_a_(), true, i));
+                        mobsToAttack.put(entry.getKey().getLocation(), new MobEntryView(entry.getKey().getLocation(), true, i));
                     }
                 }
             }

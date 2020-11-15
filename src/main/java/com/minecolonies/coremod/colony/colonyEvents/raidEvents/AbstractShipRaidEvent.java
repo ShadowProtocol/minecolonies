@@ -188,7 +188,7 @@ public abstract class AbstractShipRaidEvent implements IColonyRaidEvent, IColony
     {
         final String directionName = BlockPosUtil.calcDirection(colony.getCenter(), spawnPoint);
         raidBar.setName(getDisplayName().append(new StringTextComponent(" - " + directionName)));
-        for (final PlayerEntity player : colony.getImportantMessageEntityPlayers())
+        for (final PlayerEntity player : colony.getPackageManager().getCloseSubscribers())
         {
             raidBar.addPlayer((ServerPlayerEntity) player);
         }
@@ -293,7 +293,7 @@ public abstract class AbstractShipRaidEvent implements IColonyRaidEvent, IColony
             // remove at nightfall after spawners are killed.
             if (spawners.isEmpty())
             {
-                daysToGo = 1;
+                daysToGo = 2;
                 LanguageHandler.sendPlayersMessage(colony.getImportantMessageEntityPlayers(), ALL_PIRATE_SPAWNERS_DESTROYED_MESSAGE);
             }
         }

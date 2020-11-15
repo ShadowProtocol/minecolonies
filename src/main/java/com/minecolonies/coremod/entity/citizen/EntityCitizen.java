@@ -49,7 +49,6 @@ import net.minecraft.entity.*;
 import net.minecraft.entity.ai.attributes.Attributes;
 import net.minecraft.entity.ai.goal.LookAtGoal;
 import net.minecraft.entity.ai.goal.LookAtWithoutMovingGoal;
-import net.minecraft.entity.ai.goal.OpenDoorGoal;
 import net.minecraft.entity.ai.goal.SwimGoal;
 import net.minecraft.entity.item.ItemEntity;
 import net.minecraft.entity.monster.MonsterEntity;
@@ -93,6 +92,7 @@ import static com.minecolonies.api.util.constant.NbtTagConstants.*;
 import static com.minecolonies.api.util.constant.Suppression.INCREMENT_AND_DECREMENT_OPERATORS_SHOULD_NOT_BE_USED_IN_A_METHOD_CALL_OR_MIXED_WITH_OTHER_OPERATORS_IN_AN_EXPRESSION;
 import static com.minecolonies.api.util.constant.TranslationConstants.CITIZEN_RENAME_NOT_ALLOWED;
 import static com.minecolonies.api.util.constant.TranslationConstants.CITIZEN_RENAME_SAME;
+import static com.minecolonies.coremod.entity.ai.minimal.EntityAIInteractToggleAble.*;
 
 /**
  * The Class used to represent the citizen entities.
@@ -202,6 +202,11 @@ public class EntityCitizen extends AbstractEntityCitizen
     private ILocation location = null;
 
     /**
+     * Cached team name the entity belongs to.
+     */
+    private String cachedTeamName;
+
+    /**
      * The entities states
      */
     private enum EntityState implements IState
@@ -290,9 +295,10 @@ public class EntityCitizen extends AbstractEntityCitizen
             citizenColonyHandler.updateColonyClient();
             if (citizenColonyHandler.getColonyId() != 0 && citizenId != 0)
             {
-                final IColonyView colonyView = IColonyManager.getInstance().getColonyView(citizenColonyHandler.getColonyId(), world.getDimensionKey().func_240901_a_());
+                final IColonyView colonyView = IColonyManager.getInstance().getColonyView(citizenColonyHandler.getColonyId(), world.getDimensionKey().getLocation());
                 if (colonyView != null)
                 {
+                    this.cachedTeamName = colonyView.getTeamName();
                     this.citizenDataView = colonyView.getCitizen(citizenId);
                     if (citizenDataView != null)
                     {
@@ -329,8 +335,7 @@ public class EntityCitizen extends AbstractEntityCitizen
         this.goalSelector.addGoal(++priority, new EntityAIEatTask(this));
         this.goalSelector.addGoal(++priority, new EntityAISickTask(this));
         this.goalSelector.addGoal(++priority, new EntityAISleep(this));
-        this.goalSelector.addGoal(++priority, new OpenDoorGoal(this, true));
-        this.goalSelector.addGoal(priority, new EntityAIOpenFenceGate(this, true));
+        this.goalSelector.addGoal(priority, new EntityAIInteractToggleAble(this, FENCE_TOGGLE, TRAP_TOGGLE, DOOR_TOGGLE));
         this.goalSelector.addGoal(++priority, new LookAtWithoutMovingGoal(this, PlayerEntity.class, WATCH_CLOSEST2, 1.0F));
         this.goalSelector.addGoal(++priority, new LookAtWithoutMovingGoal(this, EntityCitizen.class, WATCH_CLOSEST2_FAR, WATCH_CLOSEST2_FAR_CHANCE));
         this.goalSelector.addGoal(++priority, new EntityAICitizenWander(this, DEFAULT_SPEED, 1.0D));
@@ -348,7 +353,7 @@ public class EntityCitizen extends AbstractEntityCitizen
     @Override
     public ActionResultType func_233661_c_(final PlayerEntity player, @NotNull final Hand hand)
     {
-        final IColonyView iColonyView = IColonyManager.getInstance().getColonyView(citizenColonyHandler.getColonyId(), player.world.getDimensionKey().func_240901_a_());
+        final IColonyView iColonyView = IColonyManager.getInstance().getColonyView(citizenColonyHandler.getColonyId(), player.world.getDimensionKey().getLocation());
         if (iColonyView != null && !iColonyView.getPermissions().hasPermission(player, Action.ACCESS_HUTS))
         {
             return ActionResultType.FAIL;
@@ -395,7 +400,7 @@ public class EntityCitizen extends AbstractEntityCitizen
         {
             if (citizenColonyHandler.getColonyId() != 0 && citizenId != 0)
             {
-                final IColonyView colonyView = IColonyManager.getInstance().getColonyView(citizenColonyHandler.getColonyId(), world.getDimensionKey().func_240901_a_());
+                final IColonyView colonyView = IColonyManager.getInstance().getColonyView(citizenColonyHandler.getColonyId(), world.getDimensionKey().getLocation());
                 if (colonyView != null)
                 {
                     this.citizenDataView = colonyView.getCitizen(citizenId);
@@ -462,7 +467,7 @@ public class EntityCitizen extends AbstractEntityCitizen
     {
         if (citizenColonyHandler.getColonyId() != 0 && citizenId != 0)
         {
-            final IColonyView colonyView = IColonyManager.getInstance().getColonyView(citizenColonyHandler.getColonyId(), world.getDimensionKey().func_240901_a_());
+            final IColonyView colonyView = IColonyManager.getInstance().getColonyView(citizenColonyHandler.getColonyId(), world.getDimensionKey().getLocation());
             if (colonyView != null)
             {
                 this.citizenDataView = colonyView.getCitizen(citizenId);
@@ -570,7 +575,7 @@ public class EntityCitizen extends AbstractEntityCitizen
     {
         if (world.isRemote)
         {
-            final IColonyView colonyView = IColonyManager.getInstance().getColonyView(citizenColonyHandler.getColonyId(), world.getDimensionKey().func_240901_a_());
+            final IColonyView colonyView = IColonyManager.getInstance().getColonyView(citizenColonyHandler.getColonyId(), world.getDimensionKey().getLocation());
             if (colonyView != null)
             {
                 final UnlockAbilityResearchEffect effect = colonyView.getResearchManager().getResearchEffects().getEffect(RAILS, UnlockAbilityResearchEffect.class);
@@ -1276,9 +1281,16 @@ public class EntityCitizen extends AbstractEntityCitizen
             }
         }
 
-        if (sourceEntity instanceof ServerPlayerEntity && getCitizenJobHandler().getColonyJob() instanceof AbstractJobGuard)
+        if (sourceEntity instanceof ServerPlayerEntity)
         {
-            return !IGuardBuilding.checkIfGuardShouldTakeDamage(this, (PlayerEntity) sourceEntity);
+            if (citizenColonyHandler.getColony().getRaiderManager().isRaided())
+            {
+                return false;
+            }
+            if (getCitizenJobHandler().getColonyJob() instanceof AbstractJobGuard)
+            {
+                return !IGuardBuilding.checkIfGuardShouldTakeDamage(this, (PlayerEntity) sourceEntity);
+            }
         }
         return false;
     }
@@ -1286,7 +1298,7 @@ public class EntityCitizen extends AbstractEntityCitizen
     @Override
     public void move(final MoverType typeIn, final Vector3d pos)
     {
-        //todo someaddons: removse this on the minimum AI rework.
+        //todo someaddons: remove this on the minimum AI rework.
         if (pos.x != 0 || pos.z != 0)
         {
             if (getCitizenData() != null && getCitizenData().isAsleep())
@@ -1437,6 +1449,16 @@ public class EntityCitizen extends AbstractEntityCitizen
         for (int i = 0; i < possibleGuards.size() && i <= CALL_TO_HELP_AMOUNT; i++)
         {
             ((AbstractEntityAIGuard<?, ?>) possibleGuards.get(i).getCitizenData().getJob().getWorkerAI()).startHelpCitizen(this, (LivingEntity) attacker);
+        }
+    }
+
+    @Override
+    protected void collideWithEntity(final Entity entity)
+    {
+        super.collideWithEntity(entity);
+        if (!world.isRemote && entity instanceof AbstractEntityCitizen)
+        {
+            getCitizenDiseaseHandler().onCollission((AbstractEntityCitizen) entity);
         }
     }
 
@@ -1603,9 +1625,14 @@ public class EntityCitizen extends AbstractEntityCitizen
     @Override
     public Team getTeam()
     {
-        if (world == null || world.isRemote)
+        if (world == null || (world.isRemote && cachedTeamName == null))
         {
             return null;
+        }
+
+        if (world.isRemote)
+        {
+            return world.getScoreboard().getTeam(this.cachedTeamName);
         }
 
         if (getCitizenColonyHandler().getColony() != null)

@@ -32,6 +32,9 @@ repositories {
     flatDir {
         dirs 'libs'
     }
+    maven {
+        url = "https://www.cursemaven.com"
+    }
 }
 
 apply plugin: 'net.minecraftforge.gradle'
@@ -93,7 +96,7 @@ dependencies {
     additionalMods "com.ldtteam:structurize:${config.structurize_version}"
     compile "com.ldtteam:datagenerators:0.1.38-ALPHA"
     
-    implementation fg.deobf("mezz.jei:jei-1.16.2:${config.jei_version}")
+    implementation fg.deobf("mezz.jei:jei-${config.minecraft_version}:${config.jei_version}")
 
     testImplementation  'junit:junit:4.12'
     testImplementation  "org.mockito:mockito-core:1.+"
@@ -325,7 +328,8 @@ curseforge {
 
         project {
             id = '245506'
-            addGameVersion '1.16.2'
+            addGameVersion '1.16.3'
+            addGameVersion '1.16.4'
             changelog = file('build/changelog.md')
             changelogType = 'markdown'
             releaseType = System.getenv().CURSERELEASETYPE

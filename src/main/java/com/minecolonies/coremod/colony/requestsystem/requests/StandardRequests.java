@@ -1,7 +1,11 @@
 package com.minecolonies.coremod.colony.requestsystem.requests;
 
 import com.google.common.collect.ImmutableList;
+import com.minecolonies.api.colony.ICitizenDataView;
 import com.minecolonies.api.colony.IColonyManager;
+import com.minecolonies.api.colony.IColonyView;
+import com.minecolonies.api.colony.buildings.IBuildingWorkerView;
+import com.minecolonies.api.colony.buildings.views.IBuildingView;
 import com.minecolonies.api.colony.requestsystem.request.RequestState;
 import com.minecolonies.api.colony.requestsystem.requestable.*;
 import com.minecolonies.api.colony.requestsystem.requestable.crafting.AbstractCrafting;
@@ -14,12 +18,16 @@ import com.minecolonies.api.colony.requestsystem.token.IToken;
 import com.minecolonies.api.util.ItemStackUtils;
 import com.minecolonies.api.util.constant.ToolLevelConstants;
 import com.minecolonies.api.util.constant.TranslationConstants;
+import com.minecolonies.coremod.colony.buildings.workerbuildings.BuildingDeliveryman;
+import com.minecolonies.coremod.colony.jobs.views.CrafterJobView;
+import com.minecolonies.coremod.colony.jobs.views.DmanJobView;
 import com.minecolonies.coremod.colony.requestable.SmeltableOre;
 import com.minecolonies.coremod.util.text.NonSiblingFormattingTextComponent;
 import net.minecraft.item.ItemStack;
 import net.minecraft.tileentity.FurnaceTileEntity;
 import net.minecraft.util.NonNullList;
 import net.minecraft.util.ResourceLocation;
+import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.text.IFormattableTextComponent;
 import net.minecraft.util.text.ITextComponent;
 import net.minecraft.util.text.StringTextComponent;
@@ -29,6 +37,8 @@ import org.jetbrains.annotations.NotNull;
 import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
+
+import static com.minecolonies.api.util.constant.TranslationConstants.*;
 
 /**
  * Final class holding all the requests for requestables inside minecolonie
@@ -223,6 +233,38 @@ public final class StandardRequests
             return ImmutableList.of();
         }
 
+        @Override
+        public List<IFormattableTextComponent> getResolverToolTip(final IColonyView colony)
+        {
+            final String requester = getRequester().getRequesterDisplayName(colony.getRequestManager(), this).getString();
+
+            int posInList = -1;
+            for (IBuildingView view : colony.getBuildings())
+            if (view instanceof BuildingDeliveryman.View)
+            {
+                for (int worker : ((BuildingDeliveryman.View) view).getWorkerId())
+                {
+                    final ICitizenDataView citizen = colony.getCitizen(worker);
+                    if (citizen != null)
+                    {
+                        if (citizen.getJobView() instanceof DmanJobView && ((DmanJobView) citizen.getJobView()).getDataStore().getQueue().contains(getId()))
+                        {
+                            posInList = ((DmanJobView) citizen.getJobView()).getDataStore().getQueue().indexOf(getId());
+                        }
+                    }
+                }
+            }
+
+            if (posInList >= 0)
+            {
+                return ImmutableList.of(new TranslationTextComponent(FROM, requester), new TranslationTextComponent(IN_QUEUE, posInList));
+            }
+            else
+            {
+                return ImmutableList.of(new TranslationTextComponent(FROM, requester));
+            }
+        }
+
         @NotNull
         @Override
         public ResourceLocation getDisplayIcon()
@@ -299,14 +341,7 @@ public final class StandardRequests
         @Override
         public final ITextComponent getShortDisplayString()
         {
-            final IFormattableTextComponent result = new NonSiblingFormattingTextComponent();
-            final IFormattableTextComponent preType = new TranslationTextComponent(getTranslationKey());
-
-            result.append(preType);
-
-            preType.append(getRequest().getStack().getTextComponent());
-
-            return result;
+            return new TranslationTextComponent(TranslationConstants.REQUEST_CRAFTING_DISPLAY, new StringTextComponent(String.valueOf(getRequest().getMinCount())), getRequest().getStack().getTextComponent());
         }
 
         protected abstract String getTranslationKey();
@@ -316,6 +351,51 @@ public final class StandardRequests
         public final List<ItemStack> getDisplayStacks()
         {
             return ImmutableList.of();
+        }
+
+        @Override
+        public List<IFormattableTextComponent> getResolverToolTip(final IColonyView colony)
+        {
+            final String requester = getRequester().getRequesterDisplayName(colony.getRequestManager(), this).getString();
+
+            try
+            {
+                final BlockPos resolver = colony.getRequestManager().getResolverForRequest(getId()).getLocation().getInDimensionLocation();
+                final IBuildingView view = colony.getBuilding(resolver);
+
+                int posInList = -1;
+                if (view instanceof IBuildingWorkerView)
+                {
+                    for (int worker : ((IBuildingWorkerView) view).getWorkerId())
+                    {
+                        final ICitizenDataView citizen = colony.getCitizen(worker);
+                        if (citizen != null)
+                        {
+                            if (citizen.getJobView() instanceof CrafterJobView && ((CrafterJobView) citizen.getJobView()).getDataStore().getQueue().contains(getId()))
+                            {
+                                posInList = ((CrafterJobView) citizen.getJobView()).getDataStore().getQueue().indexOf(getId());
+                            }
+                        }
+                    }
+                }
+
+                if (posInList >= 0)
+                {
+                    return ImmutableList.of(new TranslationTextComponent(AT, requester), new TranslationTextComponent(IN_QUEUE, posInList));
+                }
+                else if (getState() == RequestState.FOLLOWUP_IN_PROGRESS)
+                {
+                    return ImmutableList.of(new TranslationTextComponent(AT, requester), new TranslationTextComponent(FINISHED));
+                }
+                else
+                {
+                    return ImmutableList.of(new TranslationTextComponent(AT, requester), new TranslationTextComponent(MISSING_DELIVERIES));
+                }
+            }
+            catch (IllegalArgumentException ex)
+            {
+                return ImmutableList.of(new TranslationTextComponent(AT, requester), new TranslationTextComponent(NOT_RESOLVED));
+            }
         }
 
         @NotNull
@@ -498,7 +578,7 @@ public final class StandardRequests
             {
                 foodExamples = ImmutableList.copyOf(IColonyManager.getInstance()
                                                       .getCompatibilityManager()
-                                                      .getBlockList()
+                                                      .getListOfAllItems()
                                                       .stream()
                                                       .filter(item -> item.getItem().isFood())
                                                       .collect(Collectors.toList()));
@@ -547,7 +627,7 @@ public final class StandardRequests
             {
                 oreExamples = ImmutableList.copyOf(IColonyManager.getInstance()
                                                      .getCompatibilityManager()
-                                                     .getBlockList()
+                                                     .getListOfAllItems()
                                                      .stream()
                                                      .filter(IColonyManager.getInstance().getCompatibilityManager()::isOre)
                                                      .collect(Collectors.toList()));
@@ -597,7 +677,7 @@ public final class StandardRequests
             {
                 burnableExamples = ImmutableList.copyOf(IColonyManager.getInstance()
                                                           .getCompatibilityManager()
-                                                          .getBlockList()
+                                                          .getListOfAllItems()
                                                           .stream()
                                                           .filter(FurnaceTileEntity::isFuel)
                                                           .collect(Collectors.toList()));

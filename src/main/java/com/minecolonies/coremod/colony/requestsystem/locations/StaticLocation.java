@@ -97,7 +97,7 @@ public class StaticLocation implements ILocation
     @Override
     public String toString()
     {
-        return "Dim: " + dimension.getPath() + " " + pos.getX() + "." + pos.getY() + "." + pos.getZ() + " ";
+        return "Dim: " + dimension + " " + pos.getX() + " " + pos.getY() + " " + pos.getZ() + " ";
     }
 
     /**
@@ -197,7 +197,7 @@ public class StaticLocation implements ILocation
         @Override
         public StaticLocation getNewInstance(@NotNull final IFactoryController factoryController, @NotNull final BlockPos input)
         {
-            return new StaticLocation(input, World.OVERWORLD.func_240901_a_());
+            return new StaticLocation(input, World.OVERWORLD.getLocation());
         }
 
         @Override
@@ -210,6 +210,12 @@ public class StaticLocation implements ILocation
         public StaticLocation deserialize(IFactoryController controller, PacketBuffer buffer) throws Throwable
         {
             return StaticLocation.deserialize(buffer);
+        }
+
+        @Override
+        public short getSerializationId()
+        {
+            return 3;
         }
     }
 

@@ -25,6 +25,7 @@ import com.minecolonies.coremod.blocks.huts.BlockHutTownHall;
 import com.minecolonies.coremod.blocks.huts.BlockHutWareHouse;
 import com.minecolonies.coremod.colony.Colony;
 import com.minecolonies.coremod.colony.buildings.AbstractBuildingGuards;
+import com.minecolonies.coremod.colony.buildings.modules.TavernBuildingModule;
 import com.minecolonies.coremod.colony.buildings.workerbuildings.*;
 import com.minecolonies.coremod.colony.workorders.WorkOrderBuildBuilding;
 import com.minecolonies.coremod.entity.ai.citizen.builder.ConstructionTapeHelper;
@@ -255,6 +256,28 @@ public class BuildingManager implements IBuildingManager
             return buildings.get(buildingId);
         }
         return null;
+    }
+
+    @Nullable
+    @Override
+    public IWareHouse getClosestWarehouseInColony(final BlockPos pos)
+    {
+        IWareHouse wareHouse = null;
+        double dist = 0;
+        for (final IWareHouse building : wareHouses)
+        {
+            if (building.getBuildingLevel() > 0 && building.getTileEntity() != null)
+            {
+                final double tempDist = building.getPosition().distanceSq(pos);
+                if (wareHouse == null || tempDist < dist)
+                {
+                    dist = tempDist;
+                    wareHouse = building;
+                }
+            }
+        }
+
+        return wareHouse;
     }
 
     @Override
@@ -709,7 +732,7 @@ public class BuildingManager implements IBuildingManager
         {
             for (final IBuilding building : buildings.values())
             {
-                if (building instanceof BuildingTavern)
+                if (building.hasModule(TavernBuildingModule.class))
                 {
                     LanguageHandler.sendPlayerMessage(player, "tile.blockhut.tavern.limit");
                     return false;

@@ -116,6 +116,8 @@ public final class NbtTagConstants
     public static final String TAG_MERCENARY_TIME         = "mercenaryUseTime";
     public static final String TAG_IDLE                   = "idle";
     public static final String TAG_CITIZENDATA_TYPE       = "citizenDataType";
+    public static final String TAG_PURGED_MOBS            = "purgedMobs";
+    public static final String TAG_MANUAL_JOB_SELECTION   = "manualMode";
 
     /**
      * Event tags
@@ -271,6 +273,11 @@ public final class NbtTagConstants
      * Tag used when a Compound wraps a list.
      */
     public static final String TAG_LIST = "List";
+
+    /**
+     * Tag for the ongoing list of deliveries.
+     */
+    public static final String TAG_ONGOING_LIST = "OngoingList";
 
     public static final String TAG_ASSIGNED_LIST = "AssignedList";
 

@@ -14,8 +14,8 @@ import com.minecolonies.api.util.Log;
 import com.minecolonies.api.util.WorldUtil;
 import com.minecolonies.coremod.MineColonies;
 import com.minecolonies.coremod.colony.Colony;
+import com.minecolonies.coremod.colony.buildings.modules.LivingBuildingModule;
 import com.minecolonies.coremod.colony.buildings.workerbuildings.BuildingGuardTower;
-import com.minecolonies.coremod.colony.buildings.workerbuildings.BuildingHome;
 import com.minecolonies.coremod.colony.buildings.workerbuildings.BuildingTownHall;
 import com.minecolonies.coremod.colony.colonyEvents.raidEvents.HordeRaidEvent;
 import com.minecolonies.coremod.colony.colonyEvents.raidEvents.amazonevent.AmazonRaidEvent;
@@ -51,7 +51,7 @@ public class RaidManager implements IRaiderManager
     /**
      * Spawn modifier to decrease the spawn-rate.
      */
-    public static final double SPAWN_MODIFIER = 50;
+    public static final double SPAWN_MODIFIER = 60;
 
     /**
      * Min distance to keep while spawning near buildings
@@ -96,7 +96,7 @@ public class RaidManager implements IRaiderManager
     /**
      * Percentage increased amount of spawns per player
      */
-    private static final double INCREASE_PER_PLAYER = 0.10;
+    private static final double INCREASE_PER_PLAYER = 0.05;
 
     /**
      * Chance to ignore biome selection
@@ -419,7 +419,7 @@ public class RaidManager implements IRaiderManager
                           && WorldUtil.isBlockLoaded(colony.getWorld(), tempPos.offset(dir1, 32))
                           && WorldUtil.isBlockLoaded(colony.getWorld(), tempPos.offset(dir2, 16)))
                     {
-                        if (isValidSpawnPoint(tempPos.offset(dir1, 16), loadedBuildings))
+                        if (isValidSpawnPoint(tempPos.offset(dir1, 16)))
                         {
                             spawnPos = tempPos.offset(dir1, 16);
                         }
@@ -436,7 +436,7 @@ public class RaidManager implements IRaiderManager
                           && WorldUtil.isBlockLoaded(colony.getWorld(), tempPos.offset(dir2, 32))
                           && WorldUtil.isBlockLoaded(colony.getWorld(), tempPos.offset(dir1, 16)))
                     {
-                        if (isValidSpawnPoint(tempPos.offset(dir2, 16), loadedBuildings))
+                        if (isValidSpawnPoint(tempPos.offset(dir2, 16)))
                         {
                             spawnPos = tempPos.offset(dir2, 16);
                         }
@@ -449,7 +449,7 @@ public class RaidManager implements IRaiderManager
                 }
             }
 
-            if (isValidSpawnPoint(spawnPos, loadedBuildings))
+            if (isValidSpawnPoint(spawnPos))
             {
                 return spawnPos;
             }
@@ -465,9 +465,9 @@ public class RaidManager implements IRaiderManager
      * @param loadedBuildings the loaded buildings
      * @return true if valid
      */
-    private boolean isValidSpawnPoint(final BlockPos spawnPos, final List<IBuilding> loadedBuildings)
+    private boolean isValidSpawnPoint(final BlockPos spawnPos)
     {
-        for (final IBuilding building : loadedBuildings)
+        for (final IBuilding building : colony.getBuildingManager().getBuildings().values())
         {
             if (building.getBuildingLevel() == 0)
             {
@@ -479,10 +479,10 @@ public class RaidManager implements IRaiderManager
             // Additional raid protection for certain buildings, towers can be used now to deal with unlucky - inwall spawns
             if (building instanceof BuildingGuardTower)
             {
-                // 47/59/71/83/95
-                minDist += building.getBuildingLevel() * 12;
+                // 32/39/48/55/62
+                minDist += building.getBuildingLevel() * 7;
             }
-            else if (building instanceof BuildingHome)
+            else if (building.hasModule(LivingBuildingModule.class))
             {
                 // 39/43/47/51/55
                 minDist += building.getBuildingLevel() * 4;
@@ -636,7 +636,7 @@ public class RaidManager implements IRaiderManager
 
         for (final IBuilding building : colony.getBuildingManager().getBuildings().values())
         {
-            levels += building.getBuildingLevel() * building.getBuildingLevel();
+            levels += building.getBuildingLevel() * 2;
         }
 
         return levels;
